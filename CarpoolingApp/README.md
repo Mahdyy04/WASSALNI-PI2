@@ -12,17 +12,18 @@ A native Android application built with Kotlin for the carpooling system, follow
   
 - 👥 **Passenger Features**
   - Search for available rides by city and date
+  - Filter rides by driver gender (UI ready)
   - View ride details (price, seats, route info)
   - Book rides instantly
   - View and manage bookings with pull-to-refresh
   - Cancel pending bookings
   
 - 🚗 **Driver Features**
-  - All passenger features
   - Publish new rides with departure/destination cities
   - Set available seats and price per seat
   - View published rides
   - Accept/Reject booking requests from passengers
+  - Delete rides
 
 - ⭐ **Review System** (API ready)
   - Rate drivers and passengers after rides
@@ -50,21 +51,42 @@ A native Android application built with Kotlin for the carpooling system, follow
 - **UI**: XML layouts with Material Design 3
 - **Networking**: Retrofit 2 + OkHttp 4
 - **Coroutines**: For asynchronous operations
-- **Dependency Injection**: Manual (can be upgraded to Hilt/Dagger)
 
 ## Backend Integration
 
-This app connects to the following microservices:
+This app connects to microservices via Spring Cloud Gateway with Eureka service discovery.
 
-| Service | Port | Description |
-|---------|------|-------------|
-| Gateway | 8084 | Main entry point (all requests go through here) |
-| Authentication | 8081 | User login, signup, profile management |
-| Ride | 8085 | Ride publishing, searching, management |
-| Booking | 8082 | Booking creation, acceptance, rejection |
-| Review | 8086 | User ratings and reviews |
-| Report | 8087 | User reports and moderation |
-| Eureka | 8083 | Service discovery |
+### Gateway Routing
+
+The Gateway uses Eureka discovery with the pattern `/{service-name}/api/{endpoint}`:
+
+| Service | Service Name | Port | Gateway Route |
+|---------|-------------|------|---------------|
+| Gateway | gateway-service | 8084 | Main entry point |
+| Authentication | authentication-service | 8081 | `/authentication-service/api/auth/*` |
+| Rides | ride-service | 8085 | `/ride-service/api/rides/*` |
+| Bookings | booking-service | 8082 | `/booking-service/api/bookings/*` |
+| Reviews | review-service | 8086 | `/review-service/api/reviews/*` |
+| Reports | report-service | 8087 | `/report-service/api/reports/*` |
+| Eureka | eureka-server | 8083 | Service discovery |
+
+### Example API Calls
+
+```
+# Authentication
+POST http://localhost:8084/authentication-service/api/auth/authenticate
+POST http://localhost:8084/authentication-service/api/auth/createAccount
+
+# Rides
+GET http://localhost:8084/ride-service/api/rides
+GET http://localhost:8084/ride-service/api/rides/search?departureCity=Tunis
+POST http://localhost:8084/ride-service/api/rides/create
+
+# Bookings
+POST http://localhost:8084/booking-service/api/bookings/create
+GET http://localhost:8084/booking-service/api/bookings/passenger/{passengerId}
+POST http://localhost:8084/booking-service/api/bookings/{bookingId}/accept?driverId=xxx
+```
 
 ## Project Structure
 
@@ -77,12 +99,14 @@ CarpoolingApp/
 │   │       │   ├── adapters/          # RecyclerView adapters
 │   │       │   │   ├── RideAdapter.kt
 │   │       │   │   ├── BookingAdapter.kt
+│   │       │   │   ├── DriverRideAdapter.kt
 │   │       │   │   └── PendingBookingAdapter.kt
 │   │       │   ├── api/               # API service interfaces
 │   │       │   │   └── ApiService.kt
 │   │       │   ├── fragments/         # UI fragments
 │   │       │   │   ├── SearchRidesFragment.kt
 │   │       │   │   ├── MyBookingsFragment.kt
+│   │       │   │   ├── MyRidesFragment.kt
 │   │       │   │   ├── PublishRideFragment.kt
 │   │       │   │   └── PendingBookingsFragment.kt
 │   │       │   ├── models/            # Data models
@@ -99,32 +123,11 @@ CarpoolingApp/
 │   │       │   └── DashboardActivity.kt
 │   │       ├── res/
 │   │       │   ├── layout/            # XML layouts
-│   │       │   │   ├── activity_main.xml
-│   │       │   │   ├── activity_login.xml
-│   │       │   │   ├── activity_signup.xml
-│   │       │   │   ├── activity_dashboard.xml
-│   │       │   │   ├── fragment_search_rides.xml
-│   │       │   │   ├── fragment_my_bookings.xml
-│   │       │   │   ├── fragment_publish_ride.xml
-│   │       │   │   ├── fragment_pending_bookings.xml
-│   │       │   │   ├── item_ride.xml
-│   │       │   │   ├── item_booking.xml
-│   │       │   │   └── item_pending_booking.xml
-│   │       │   ├── values/            # Resources
-│   │       │   │   ├── strings.xml
-│   │       │   │   ├── colors.xml
-│   │       │   │   └── themes.xml
-│   │       │   └── xml/               # App config
-│   │       │       ├── backup_rules.xml
-│   │       │       └── data_extraction_rules.xml
+│   │       │   └── values/            # Resources
 │   │       └── AndroidManifest.xml
-│   ├── build.gradle.kts
-│   └── proguard-rules.pro
-├── gradle/
-│   └── wrapper/
+│   └── build.gradle.kts
 ├── build.gradle.kts
-├── settings.gradle.kts
-└── gradle.properties
+└── settings.gradle.kts
 ```
 
 ## Getting Started
@@ -138,7 +141,7 @@ CarpoolingApp/
 
 ### Installation
 
-1. **Clone the repository** (already done if you're reading this)
+1. **Clone the repository**
 
 2. **Open in Android Studio**
    - Open Android Studio
@@ -163,55 +166,48 @@ CarpoolingApp/
 
 ## Backend Setup
 
-The app connects to the following microservices:
-
-- **Gateway Service**: Port 8084 (Main entry point)
-- **Authentication Service**: Port 8081
-- **Ride Service**: Port 8085
-- **Booking Service**: Port 8082
-
 ### Starting Backend Services
 
-1. Navigate to each microservice directory:
+Start services in this order:
+
+1. **Eureka Server** (8083) - Service discovery must start first
    ```bash
-   cd ../microservices/gateway-service\(8084\)
+   cd backend/eureka-server\(8083\)
    mvn spring-boot:run
    ```
 
-2. Repeat for other services (authentication, ride, booking)
+2. **Gateway Service** (8084)
+   ```bash
+   cd backend/gateway-service\(8084\)
+   mvn spring-boot:run
+   ```
 
-3. Verify services are running:
-   - Gateway: http://localhost:8084/actuator/health
-   - Auth: http://localhost:8081/actuator/health
+3. **Microservices** (any order)
+   ```bash
+   cd backend/authentication-service\(8081\)
+   mvn spring-boot:run
+   
+   cd backend/ride-service\(8085\)
+   mvn spring-boot:run
+   
+   cd backend/booking-service\(8082\)
+   mvn spring-boot:run
+   ```
 
-## Usage
+4. **Verify services are registered** in Eureka:
+   - Open http://localhost:8083
+   - Check that all services appear in the instances list
 
-### Demo Mode
+### API Endpoints
 
-The app includes demo/fallback mode that works without a backend:
-- Login with any email/password
-- Signup with any credentials
-- Sample rides are displayed
-- All features are functional in demo mode
+#### Authentication Endpoints
 
-### With Backend
-
-When backend services are running:
-- Real authentication against the auth service
-- Actual ride data from the database
-- Real booking operations
-- Persistent data
-
-## API Integration
-
-### Authentication Endpoints
-
-```kotlin
-POST /api/auth/authenticate
+```
+POST /authentication-service/api/auth/authenticate
 Body: { "email": "user@example.com", "password": "password" }
 Response: { "user": {...}, "token": "jwt-token", "status": "success" }
 
-POST /api/auth/createAccount
+POST /authentication-service/api/auth/createAccount
 Body: { 
   "email": "...", 
   "password": "...", 
@@ -225,16 +221,16 @@ Body: {
 Response: User object
 ```
 
-### Ride Endpoints
+#### Ride Endpoints
 
-```kotlin
-GET /api/rides
+```
+GET /ride-service/api/rides
 Response: List of all rides
 
-GET /api/rides/search?departureCity=Tunis&destinationCity=Sousse&date=2025-12-01
+GET /ride-service/api/rides/search?departureCity=Tunis&destinationCity=Sousse&date=2025-12-01
 Response: [ { "id": "1", "departureCity": {...}, "destinationCity": {...}, ... }, ... ]
 
-POST /api/rides/create
+POST /ride-service/api/rides/create
 Body: { 
   "departureCity": { "name": "Tunis", "postalCode": "1000" },
   "destinationCity": { "name": "Sousse", "postalCode": "4000" },
@@ -245,34 +241,34 @@ Body: {
 }
 Response: Created ride object
 
-GET /api/rides/driver/{driverId}
+GET /ride-service/api/rides/driver/{driverId}
 Response: List of driver's rides
 ```
 
-### Booking Endpoints
+#### Booking Endpoints
 
-```kotlin
-POST /api/bookings/create
+```
+POST /booking-service/api/bookings/create
 Body: { "rideId": "...", "passengerId": "...", "seats": 1 }
 Response: BookingResponse object
 
-GET /api/bookings/passenger/{passengerId}
+GET /booking-service/api/bookings/passenger/{passengerId}
 Response: List of passenger's bookings
 
-GET /api/bookings/driver/{driverId}/pending
+GET /booking-service/api/bookings/driver/{driverId}/pending
 Response: List of pending bookings for driver
 
-DELETE /api/bookings/{bookingId}?passengerId=...
+DELETE /booking-service/api/bookings/{bookingId}?passengerId=...
 Response: "Booking canceled"
 
-POST /api/bookings/{bookingId}/accept?driverId=...
-POST /api/bookings/{bookingId}/reject?driverId=...
+POST /booking-service/api/bookings/{bookingId}/accept?driverId=...
+POST /booking-service/api/bookings/{bookingId}/reject?driverId=...
 ```
 
-### Review Endpoints
+#### Review Endpoints
 
-```kotlin
-POST /api/reviews/create
+```
+POST /review-service/api/reviews/create
 Body: { 
   "reviewerId": "...", 
   "reviewedId": "...", 
@@ -283,17 +279,14 @@ Body: {
 }
 Response: Review object
 
-GET /api/reviews/user/{userId}
-Response: List of reviews for user
-
-GET /api/reviews/user/{userId}/average
-Response: { "userId": "...", "averageRating": 4.5 }
+GET /review-service/api/reviews/user/{userId}
+GET /review-service/api/reviews/user/{userId}/average
 ```
 
-### Report Endpoints
+#### Report Endpoints
 
-```kotlin
-POST /api/reports/create
+```
+POST /report-service/api/reports/create
 Body: { 
   "reporterId": "...", 
   "reportedUserId": "...", 
@@ -303,60 +296,57 @@ Body: {
 }
 Response: Report object
 
-GET /api/reports/status/{status}
-Response: List of reports with given status
+GET /report-service/api/reports/status/{status}
 ```
 
-## Building for Release
+## Role-Based Features
 
-1. **Generate Signed APK**
-   - Build → Generate Signed Bundle/APK
-   - Select "APK"
-   - Create or select a keystore
-   - Fill in key details
-   - Select "release" build variant
-   - Click "Finish"
+### Passenger Dashboard (2 tabs)
+- **Search Rides**: Find available rides with city/date filters and optional gender filter
+- **My Bookings**: View and cancel bookings
 
-2. **Location of APK**
-   - `app/release/app-release.apk`
-
-## Development Tips
-
-- **ViewBinding**: Enabled by default, provides type-safe view access
-- **Coroutines**: Used for async operations, always run on `lifecycleScope`
-- **Error Handling**: Demo mode falls back when API calls fail
-- **Logging**: HTTP logging interceptor is enabled in debug builds
+### Driver Dashboard (3 tabs)
+- **My Rides**: View and delete published rides
+- **Pending Requests**: Accept/reject booking requests
+- **Publish Ride**: Create new rides with identity verification
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Cannot connect to backend**
-   - Check if backend services are running
-   - Verify BASE_URL in RetrofitClient.kt
-   - For emulator, use `10.0.2.2` instead of `localhost`
-   - Ensure `android:usesCleartextTraffic="true"` in AndroidManifest.xml
+1. **404 Not Found errors**
+   - Verify all backend services are registered in Eureka (http://localhost:8083)
+   - Check that service names match: `authentication-service`, `ride-service`, etc.
+   - Ensure gateway routes use the correct pattern: `/{service-name}/api/...`
 
-2. **Gradle sync failed**
+2. **Cannot connect to backend from emulator**
+   - Use `10.0.2.2` instead of `localhost` for Android emulator
+   - Ensure `android:usesCleartextTraffic="true"` in AndroidManifest.xml
+   - Check that Gateway is running on port 8084
+
+3. **Authentication fails**
+   - Verify user exists in MongoDB (wassalni database)
+   - Check password matches exactly
+   - Ensure authentication-service is registered in Eureka
+
+4. **Gradle sync failed**
    - File → Invalidate Caches / Restart
    - Delete `.gradle` and `.idea` folders
    - Sync again
 
-3. **App crashes on startup**
-   - Check Logcat for error messages
-   - Verify all dependencies are downloaded
-   - Clean and rebuild project
-
 ## Implemented Features
 
 - [x] Authentication (Login/Signup)
-- [x] Ride Search with filters
+- [x] Role-based UI (Passenger vs Driver)
+- [x] Ride Search with city/date filters
+- [x] Gender filter UI for rides
 - [x] Ride Publishing (Driver)
 - [x] Booking Management (Passenger)
 - [x] Pending Booking Requests (Driver)
 - [x] Accept/Reject Bookings (Driver)
+- [x] My Rides management (Driver)
 - [x] Pull-to-refresh for bookings
-- [x] Demo mode for offline testing
+- [x] Driver identity verification fields
 
 ## API Ready (Models implemented)
 
@@ -374,14 +364,7 @@ Response: List of reports with given status
 - [ ] Add photo upload for user profiles
 - [ ] Implement chat between drivers and passengers
 - [ ] Add payment integration
-- [ ] Implement admin panel features
-- [ ] Add unit and instrumentation tests
-- [ ] Migrate to Jetpack Compose (optional)
 
 ## License
 
 This project is part of the Carpooling Application system.
-
-## Support
-
-For issues or questions about the Android app, check the main repository documentation or contact the development team.
