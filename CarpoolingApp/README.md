@@ -22,6 +22,16 @@ A native Android application built with Kotlin for the carpooling system, follow
   - Publish new rides with departure/destination cities
   - Set available seats and price per seat
   - View published rides
+  - Accept/Reject booking requests from passengers
+
+- ⭐ **Review System** (API ready)
+  - Rate drivers and passengers after rides
+  - View average ratings
+  - Leave comments
+
+- 🚨 **Report System** (API ready)
+  - Report inappropriate behavior
+  - Track report status
 
 - 🎨 **Modern UI**
   - Material Design 3 components
@@ -42,6 +52,20 @@ A native Android application built with Kotlin for the carpooling system, follow
 - **Coroutines**: For asynchronous operations
 - **Dependency Injection**: Manual (can be upgraded to Hilt/Dagger)
 
+## Backend Integration
+
+This app connects to the following microservices:
+
+| Service | Port | Description |
+|---------|------|-------------|
+| Gateway | 8084 | Main entry point (all requests go through here) |
+| Authentication | 8081 | User login, signup, profile management |
+| Ride | 8085 | Ride publishing, searching, management |
+| Booking | 8082 | Booking creation, acceptance, rejection |
+| Review | 8086 | User ratings and reviews |
+| Report | 8087 | User reports and moderation |
+| Eureka | 8083 | Service discovery |
+
 ## Project Structure
 
 ```
@@ -52,13 +76,15 @@ CarpoolingApp/
 │   │       ├── java/com/carpooling/app/
 │   │       │   ├── adapters/          # RecyclerView adapters
 │   │       │   │   ├── RideAdapter.kt
-│   │       │   │   └── BookingAdapter.kt
+│   │       │   │   ├── BookingAdapter.kt
+│   │       │   │   └── PendingBookingAdapter.kt
 │   │       │   ├── api/               # API service interfaces
 │   │       │   │   └── ApiService.kt
 │   │       │   ├── fragments/         # UI fragments
 │   │       │   │   ├── SearchRidesFragment.kt
 │   │       │   │   ├── MyBookingsFragment.kt
-│   │       │   │   └── PublishRideFragment.kt
+│   │       │   │   ├── PublishRideFragment.kt
+│   │       │   │   └── PendingBookingsFragment.kt
 │   │       │   ├── models/            # Data models
 │   │       │   │   ├── User.kt
 │   │       │   │   ├── Ride.kt
@@ -80,8 +106,10 @@ CarpoolingApp/
 │   │       │   │   ├── fragment_search_rides.xml
 │   │       │   │   ├── fragment_my_bookings.xml
 │   │       │   │   ├── fragment_publish_ride.xml
+│   │       │   │   ├── fragment_pending_bookings.xml
 │   │       │   │   ├── item_ride.xml
-│   │       │   │   └── item_booking.xml
+│   │       │   │   ├── item_booking.xml
+│   │       │   │   └── item_pending_booking.xml
 │   │       │   ├── values/            # Resources
 │   │       │   │   ├── strings.xml
 │   │       │   │   ├── colors.xml
@@ -226,16 +254,57 @@ Response: List of driver's rides
 ```kotlin
 POST /api/bookings/create
 Body: { "rideId": "...", "passengerId": "...", "seats": 1 }
-Response: Booking object
+Response: BookingResponse object
 
 GET /api/bookings/passenger/{passengerId}
 Response: List of passenger's bookings
+
+GET /api/bookings/driver/{driverId}/pending
+Response: List of pending bookings for driver
 
 DELETE /api/bookings/{bookingId}?passengerId=...
 Response: "Booking canceled"
 
 POST /api/bookings/{bookingId}/accept?driverId=...
 POST /api/bookings/{bookingId}/reject?driverId=...
+```
+
+### Review Endpoints
+
+```kotlin
+POST /api/reviews/create
+Body: { 
+  "reviewerId": "...", 
+  "reviewedId": "...", 
+  "rideId": "...",
+  "rating": 5, 
+  "comment": "...",
+  "type": "DRIVER|PASSENGER"
+}
+Response: Review object
+
+GET /api/reviews/user/{userId}
+Response: List of reviews for user
+
+GET /api/reviews/user/{userId}/average
+Response: { "userId": "...", "averageRating": 4.5 }
+```
+
+### Report Endpoints
+
+```kotlin
+POST /api/reports/create
+Body: { 
+  "reporterId": "...", 
+  "reportedUserId": "...", 
+  "rideId": "...",
+  "reason": "INAPPROPRIATE_BEHAVIOR|NO_SHOW|UNSAFE_DRIVING|OTHER",
+  "description": "..."
+}
+Response: Report object
+
+GET /api/reports/status/{status}
+Response: List of reports with given status
 ```
 
 ## Building for Release
@@ -278,12 +347,30 @@ POST /api/bookings/{bookingId}/reject?driverId=...
    - Verify all dependencies are downloaded
    - Clean and rebuild project
 
+## Implemented Features
+
+- [x] Authentication (Login/Signup)
+- [x] Ride Search with filters
+- [x] Ride Publishing (Driver)
+- [x] Booking Management (Passenger)
+- [x] Pending Booking Requests (Driver)
+- [x] Accept/Reject Bookings (Driver)
+- [x] Pull-to-refresh for bookings
+- [x] Demo mode for offline testing
+
+## API Ready (Models implemented)
+
+- [x] Reviews API integration
+- [x] Reports API integration
+- [x] User ban/unban API
+- [x] Average ratings API
+
 ## Future Enhancements
 
-- [ ] Add pull-to-refresh functionality
-- [ ] Implement real-time notifications
+- [ ] Implement reviews UI
+- [ ] Implement reports UI
+- [ ] Add real-time notifications
 - [ ] Add maps integration for route visualization
-- [ ] Implement reviews and ratings system
 - [ ] Add photo upload for user profiles
 - [ ] Implement chat between drivers and passengers
 - [ ] Add payment integration

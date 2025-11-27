@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.carpooling.app.databinding.ActivityDashboardBinding
 import com.carpooling.app.fragments.MyBookingsFragment
+import com.carpooling.app.fragments.PendingBookingsFragment
 import com.carpooling.app.fragments.PublishRideFragment
 import com.carpooling.app.fragments.SearchRidesFragment
 import com.carpooling.app.network.RetrofitClient
@@ -53,6 +54,7 @@ class DashboardActivity : AppCompatActivity() {
         if (role == "DRIVER") {
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.publish_ride))
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_rides))
+            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.pending_requests))
         }
         
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
@@ -68,6 +70,11 @@ class DashboardActivity : AppCompatActivity() {
                     3 -> {
                         if (role == "DRIVER") {
                             loadFragment(SearchRidesFragment.newInstance(showDriverRides = true))
+                        }
+                    }
+                    4 -> {
+                        if (role == "DRIVER") {
+                            loadFragment(PendingBookingsFragment())
                         }
                     }
                 }
