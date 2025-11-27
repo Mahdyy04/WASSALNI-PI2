@@ -83,7 +83,7 @@ interface ApiService {
     suspend fun deleteRide(
         @Path("rideId") rideId: String,
         @Query("driverId") driverId: String
-    ): Response<String>
+    ): Response<Unit>
     
     // ==================== Bookings ====================
     // Service: booking-service (8082)
@@ -104,19 +104,19 @@ interface ApiService {
     suspend fun cancelBooking(
         @Path("bookingId") bookingId: String,
         @Query("passengerId") passengerId: String
-    ): Response<String>
+    ): Response<Unit>
     
     @POST("booking-service/api/bookings/{bookingId}/accept")
     suspend fun acceptBooking(
         @Path("bookingId") bookingId: String,
         @Query("driverId") driverId: String
-    ): Response<String>
+    ): Response<Unit>
     
     @POST("booking-service/api/bookings/{bookingId}/reject")
     suspend fun rejectBooking(
         @Path("bookingId") bookingId: String,
         @Query("driverId") driverId: String
-    ): Response<String>
+    ): Response<Unit>
     
     // ==================== Reviews ====================
     // Service: review-service (8086)
