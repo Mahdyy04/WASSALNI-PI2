@@ -6,19 +6,22 @@ A native Android application built with Kotlin for the carpooling system, follow
 
 - 🔐 **Authentication System**
   - User Login with email and password
-  - User Signup with role selection (Passenger/Driver)
+  - User Signup with role selection (Passenger/Driver), gender, and phone number
   - Session management with SharedPreferences
+  - JWT token support for API authentication
   
 - 👥 **Passenger Features**
-  - Search for available rides
-  - View ride details (price, seats, driver info)
+  - Search for available rides by city and date
+  - View ride details (price, seats, route info)
   - Book rides instantly
-  - View and manage bookings
+  - View and manage bookings with pull-to-refresh
+  - Cancel pending bookings
   
 - 🚗 **Driver Features**
   - All passenger features
-  - Publish new rides
-  - Manage published rides
+  - Publish new rides with departure/destination cities
+  - Set available seats and price per seat
+  - View published rides
 
 - 🎨 **Modern UI**
   - Material Design 3 components
@@ -26,6 +29,7 @@ A native Android application built with Kotlin for the carpooling system, follow
   - ViewBinding for type-safe view access
   - Tab-based navigation
   - RecyclerView for efficient list rendering
+  - Pull-to-refresh for bookings
 
 ## Tech Stack
 
@@ -34,7 +38,7 @@ A native Android application built with Kotlin for the carpooling system, follow
 - **Target SDK**: 34 (Android 14)
 - **Architecture**: MVVM-ready structure
 - **UI**: XML layouts with Material Design 3
-- **Networking**: Retrofit 2 + OkHttp 3
+- **Networking**: Retrofit 2 + OkHttp 4
 - **Coroutines**: For asynchronous operations
 - **Dependency Injection**: Manual (can be upgraded to Hilt/Dagger)
 
@@ -47,15 +51,18 @@ CarpoolingApp/
 │   │   └── main/
 │   │       ├── java/com/carpooling/app/
 │   │       │   ├── adapters/          # RecyclerView adapters
-│   │       │   │   └── RideAdapter.kt
+│   │       │   │   ├── RideAdapter.kt
+│   │       │   │   └── BookingAdapter.kt
 │   │       │   ├── api/               # API service interfaces
 │   │       │   │   └── ApiService.kt
 │   │       │   ├── fragments/         # UI fragments
-│   │       │   │   └── SearchRidesFragment.kt
+│   │       │   │   ├── SearchRidesFragment.kt
+│   │       │   │   ├── MyBookingsFragment.kt
+│   │       │   │   └── PublishRideFragment.kt
 │   │       │   ├── models/            # Data models
 │   │       │   │   ├── User.kt
 │   │       │   │   ├── Ride.kt
-│   │       │   │   └── LoginRequest.kt
+│   │       │   │   └── LoginRequest.kt  # Contains all DTOs
 │   │       │   ├── network/           # Networking setup
 │   │       │   │   └── RetrofitClient.kt
 │   │       │   ├── utils/             # Utility classes
@@ -71,7 +78,10 @@ CarpoolingApp/
 │   │       │   │   ├── activity_signup.xml
 │   │       │   │   ├── activity_dashboard.xml
 │   │       │   │   ├── fragment_search_rides.xml
-│   │       │   │   └── item_ride.xml
+│   │       │   │   ├── fragment_my_bookings.xml
+│   │       │   │   ├── fragment_publish_ride.xml
+│   │       │   │   ├── item_ride.xml
+│   │       │   │   └── item_booking.xml
 │   │       │   ├── values/            # Resources
 │   │       │   │   ├── strings.xml
 │   │       │   │   ├── colors.xml
@@ -169,30 +179,63 @@ When backend services are running:
 ### Authentication Endpoints
 
 ```kotlin
-POST /auth/login
+POST /api/auth/authenticate
 Body: { "email": "user@example.com", "password": "password" }
-Response: { "id": "1", "name": "John", "email": "...", "role": "PASSENGER", "token": "..." }
+Response: { "user": {...}, "token": "jwt-token", "status": "success" }
 
-POST /auth/signup  
-Body: { "name": "John", "email": "...", "password": "...", "role": "PASSENGER" }
-Response: User object with token
+POST /api/auth/createAccount
+Body: { 
+  "email": "...", 
+  "password": "...", 
+  "phoneNumber": "...",
+  "gender": "MALE|FEMALE",
+  "userType": "PASSENGER|DRIVER",
+  "licenseNumber": "...",  // Driver only
+  "vehicleNumber": "...",  // Driver only
+  "vehiclePlate": "..."    // Driver only
+}
+Response: User object
 ```
 
 ### Ride Endpoints
 
 ```kotlin
-GET /rides/search?from=CityA&to=CityB&date=2025-12-01
-Response: [ { "id": "1", "from": "CityA", ... }, ... ]
+GET /api/rides
+Response: List of all rides
 
-POST /rides
-Body: { "from": "CityA", "to": "CityB", "date": "...", ... }
+GET /api/rides/search?departureCity=Tunis&destinationCity=Sousse&date=2025-12-01
+Response: [ { "id": "1", "departureCity": {...}, "destinationCity": {...}, ... }, ... ]
+
+POST /api/rides/create
+Body: { 
+  "departureCity": { "name": "Tunis", "postalCode": "1000" },
+  "destinationCity": { "name": "Sousse", "postalCode": "4000" },
+  "departureDate": "2025-12-01",
+  "availableSeats": 3,
+  "pricePerSeat": 25.0,
+  "driverId": "..."
+}
 Response: Created ride object
 
-GET /bookings
-Response: List of user's bookings
+GET /api/rides/driver/{driverId}
+Response: List of driver's rides
+```
 
-POST /bookings/{rideId}
-Response: Booking confirmation
+### Booking Endpoints
+
+```kotlin
+POST /api/bookings/create
+Body: { "rideId": "...", "passengerId": "...", "seats": 1 }
+Response: Booking object
+
+GET /api/bookings/passenger/{passengerId}
+Response: List of passenger's bookings
+
+DELETE /api/bookings/{bookingId}?passengerId=...
+Response: "Booking canceled"
+
+POST /api/bookings/{bookingId}/accept?driverId=...
+POST /api/bookings/{bookingId}/reject?driverId=...
 ```
 
 ## Building for Release
