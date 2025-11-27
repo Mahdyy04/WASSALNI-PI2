@@ -6,6 +6,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicReference
 
 object RetrofitClient {
     
@@ -14,15 +15,14 @@ object RetrofitClient {
     // For Physical Device use: "http://<YOUR_COMPUTER_IP>:8084/"
     private const val BASE_URL = "http://10.0.2.2:8084/"
     
-    // Variable to store auth token (set from SessionManager when user logs in)
-    @Volatile
-    private var authToken: String? = null
+    // Thread-safe storage for auth token
+    private val authToken = AtomicReference<String?>(null)
     
     fun setAuthToken(token: String?) {
-        authToken = token
+        authToken.set(token)
     }
     
-    fun getAuthToken(): String? = authToken
+    fun getAuthToken(): String? = authToken.get()
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
@@ -32,9 +32,9 @@ object RetrofitClient {
         .addInterceptor(loggingInterceptor)
         .addInterceptor { chain ->
             val originalRequest = chain.request()
-            val token = authToken
+            val token = authToken.get()
             
-            val newRequest = if (token != null && token.isNotEmpty()) {
+            val newRequest = if (!token.isNullOrEmpty()) {
                 originalRequest.newBuilder()
                     .header("Authorization", "Bearer $token")
                     .build()
