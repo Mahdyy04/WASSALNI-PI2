@@ -114,7 +114,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/role_hint"
-                android:layout_marginBottom="24dp"
+                android:layout_marginBottom="16dp"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
                 app:boxCornerRadiusTopStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
@@ -127,6 +127,76 @@
                     android:layout_height="wrap_content"
                     android:inputType="none" />
             </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Driver-specific fields (hidden by default) -->
+            <LinearLayout
+                android:id="@+id/driverFieldsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Driver Information (Identity Verification)"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/license_hint"
+                    android:layout_marginBottom="12dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusBottomEnd="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etLicense"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/vehicle_number_hint"
+                    android:layout_marginBottom="12dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusBottomEnd="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etVehicleNumber"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/vehicle_plate_hint"
+                    android:layout_marginBottom="16dp"
+                    app:boxBackgroundMode="outline"
+                    app:boxCornerRadiusTopStart="8dp"
+                    app:boxCornerRadiusTopEnd="8dp"
+                    app:boxCornerRadiusBottomStart="8dp"
+                    app:boxCornerRadiusBottomEnd="8dp">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etVehiclePlate"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnSignup"

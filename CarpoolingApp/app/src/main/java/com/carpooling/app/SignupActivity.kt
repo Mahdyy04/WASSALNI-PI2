@@ -2,13 +2,13 @@ package com.carpooling.app
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.carpooling.app.databinding.ActivitySignupBinding
 import com.carpooling.app.models.SignupRequest
-import com.carpooling.app.models.User
 import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
 import kotlinx.coroutines.launch
@@ -54,6 +54,16 @@ class SignupActivity : AppCompatActivity() {
         
         binding.spinnerRole.setOnItemClickListener { _, _, position, _ ->
             selectedRole = if (position == 0) "PASSENGER" else "DRIVER"
+            // Show/hide driver-specific fields
+            updateDriverFieldsVisibility()
+        }
+    }
+    
+    private fun updateDriverFieldsVisibility() {
+        if (selectedRole == "DRIVER") {
+            binding.driverFieldsLayout?.visibility = View.VISIBLE
+        } else {
+            binding.driverFieldsLayout?.visibility = View.GONE
         }
     }
     
@@ -95,6 +105,11 @@ class SignupActivity : AppCompatActivity() {
     private fun signupUser(email: String, password: String, phoneNumber: String, role: String, gender: String) {
         binding.btnSignup.isEnabled = false
         
+        // Get driver-specific fields if driver role selected
+        val licenseNumber = if (role == "DRIVER") binding.etLicense?.text?.toString()?.trim() else null
+        val vehicleNumber = if (role == "DRIVER") binding.etVehicleNumber?.text?.toString()?.trim() else null
+        val vehiclePlate = if (role == "DRIVER") binding.etVehiclePlate?.text?.toString()?.trim() else null
+        
         lifecycleScope.launch {
             try {
                 val request = SignupRequest(
@@ -103,10 +118,9 @@ class SignupActivity : AppCompatActivity() {
                     phoneNumber = phoneNumber,
                     gender = gender,
                     userType = role,
-                    // Optional driver fields
-                    licenseNumber = null,
-                    vehicleNumber = null,
-                    vehiclePlate = null,
+                    licenseNumber = licenseNumber,
+                    vehicleNumber = vehicleNumber,
+                    vehiclePlate = vehiclePlate,
                     preferredPaymentMethod = if (role == "PASSENGER") "CASH" else null
                 )
                 
@@ -118,38 +132,21 @@ class SignupActivity : AppCompatActivity() {
                     Toast.makeText(this@SignupActivity, 
                         getString(R.string.success_signup), Toast.LENGTH_SHORT).show()
                     
-                    startActivity(Intent(this@SignupActivity, DashboardActivity::class.java))
+                    // Go to login page to authenticate
+                    Toast.makeText(this@SignupActivity, 
+                        "Please login with your new account", Toast.LENGTH_SHORT).show()
+                    startActivity(Intent(this@SignupActivity, LoginActivity::class.java))
                     finish()
                 } else {
-                    // For demo purposes, create a mock user if API fails
-                    createDemoUser(email, phoneNumber, role, gender)
+                    Toast.makeText(this@SignupActivity, 
+                        "Signup failed. Please try again.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Fallback to demo mode
-                createDemoUser(email, phoneNumber, role, gender)
+                Toast.makeText(this@SignupActivity, 
+                    "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.btnSignup.isEnabled = true
             }
         }
-    }
-    
-    private fun createDemoUser(email: String, phoneNumber: String, role: String, gender: String) {
-        val demoToken = "demo_token_" + System.currentTimeMillis()
-        val mockUser = User(
-            id = "demo_" + System.currentTimeMillis(),
-            email = email,
-            phoneNumber = phoneNumber,
-            gender = gender,
-            role = role,
-            token = demoToken,
-            isBanned = false
-        )
-        sessionManager.saveUser(mockUser, demoToken)
-        RetrofitClient.setAuthToken(demoToken)
-        Toast.makeText(this@SignupActivity, 
-            "Signup successful (Demo Mode)", Toast.LENGTH_SHORT).show()
-        
-        startActivity(Intent(this@SignupActivity, DashboardActivity::class.java))
-        finish()
     }
 }

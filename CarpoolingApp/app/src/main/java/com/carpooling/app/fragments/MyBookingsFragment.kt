@@ -77,10 +77,12 @@ class MyBookingsFragment : Fragment() {
                         showEmptyState()
                     }
                 } else {
-                    showDemoBookings()
+                    showEmptyState()
+                    Toast.makeText(context, "Failed to load bookings", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                showDemoBookings()
+                showEmptyState()
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.progressBar.visibility = View.GONE
                 binding.swipeRefresh.isRefreshing = false
@@ -109,29 +111,6 @@ class MyBookingsFragment : Fragment() {
         binding.rvBookings.visibility = View.GONE
     }
     
-    private fun showDemoBookings() {
-        // Demo bookings for testing
-        val demoBookings = listOf(
-            Booking(
-                id = "demo_booking_1",
-                rideId = "demo_ride_1",
-                passengerId = sessionManager.getUserId(),
-                seatsBooked = 1,
-                status = "PENDING"
-            ),
-            Booking(
-                id = "demo_booking_2",
-                rideId = "demo_ride_2",
-                passengerId = sessionManager.getUserId(),
-                seatsBooked = 2,
-                status = "ACCEPTED"
-            )
-        )
-        bookingAdapter.updateBookings(demoBookings)
-        binding.rvBookings.visibility = View.VISIBLE
-        binding.tvEmpty.visibility = View.GONE
-    }
-    
     private fun cancelBooking(booking: Booking) {
         val passengerId = sessionManager.getUserId()
         if (passengerId.isEmpty()) {
@@ -149,8 +128,7 @@ class MyBookingsFragment : Fragment() {
                     Toast.makeText(context, "Failed to cancel booking", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Demo mode
-                Toast.makeText(context, "Booking cancelled (Demo)", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

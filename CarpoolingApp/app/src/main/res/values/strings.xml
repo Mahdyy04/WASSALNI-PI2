@@ -19,6 +19,9 @@
     <string name="role_hint">Select Role</string>
     <string name="already_have_account">Already have an account?</string>
     <string name="login_link">Login</string>
+    <string name="license_hint">License Number</string>
+    <string name="vehicle_number_hint">Vehicle Number</string>
+    <string name="vehicle_plate_hint">Vehicle Plate</string>
     
     <!-- Dashboard -->
     <string name="welcome">Welcome</string>
@@ -27,7 +30,7 @@
     <string name="my_bookings">My Bookings</string>
     <string name="publish_ride">Publish Ride</string>
     <string name="my_rides">My Rides</string>
-    <string name="pending_requests">Pending Requests</string>
+    <string name="pending_requests">Requests</string>
     
     <!-- Search Rides -->
     <string name="from_hint">From (City)</string>
@@ -37,6 +40,7 @@
     <string name="book_now">Book Now</string>
     <string name="available_rides">Available Rides</string>
     <string name="no_rides_found">No rides found</string>
+    <string name="filter_by_gender">Filter by Driver Gender</string>
     
     <!-- Publish Ride -->
     <string name="seats_hint">Available Seats</string>
@@ -46,6 +50,10 @@
     <string name="departure_city">Departure City</string>
     <string name="destination_city">Destination City</string>
     <string name="postal_code_hint">Postal Code (optional)</string>
+    
+    <!-- Driver Rides -->
+    <string name="no_rides_published">No rides published yet</string>
+    <string name="delete">Delete</string>
     
     <!-- Bookings -->
     <string name="no_bookings">No bookings yet</string>

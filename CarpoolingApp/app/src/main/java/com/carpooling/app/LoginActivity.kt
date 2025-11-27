@@ -7,7 +7,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.carpooling.app.databinding.ActivityLoginBinding
 import com.carpooling.app.models.LoginRequest
-import com.carpooling.app.models.User
 import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
 import kotlinx.coroutines.launch
@@ -79,34 +78,15 @@ class LoginActivity : AppCompatActivity() {
                             "Invalid credentials", Toast.LENGTH_SHORT).show()
                     }
                 } else {
-                    // For demo purposes, create a mock user if API fails
-                    createDemoUser(email)
+                    Toast.makeText(this@LoginActivity, 
+                        "Login failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Fallback to demo mode
-                createDemoUser(email)
+                Toast.makeText(this@LoginActivity, 
+                    "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.btnLogin.isEnabled = true
             }
         }
-    }
-    
-    private fun createDemoUser(email: String) {
-        val mockUser = User(
-            id = "demo_1",
-            email = email,
-            phoneNumber = "1234567890",
-            gender = "MALE",
-            role = "PASSENGER",
-            token = "demo_token",
-            isBanned = false
-        )
-        sessionManager.saveUser(mockUser, "demo_token")
-        RetrofitClient.setAuthToken("demo_token")
-        Toast.makeText(this@LoginActivity, 
-            "Login successful (Demo Mode)", Toast.LENGTH_SHORT).show()
-        
-        startActivity(Intent(this@LoginActivity, DashboardActivity::class.java))
-        finish()
     }
 }

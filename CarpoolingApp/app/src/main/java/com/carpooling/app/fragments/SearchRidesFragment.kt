@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
@@ -12,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.carpooling.app.R
 import com.carpooling.app.adapters.RideAdapter
 import com.carpooling.app.databinding.FragmentSearchRidesBinding
-import com.carpooling.app.models.City
 import com.carpooling.app.models.CreateBookingRequest
 import com.carpooling.app.models.Ride
 import com.carpooling.app.network.RetrofitClient
@@ -28,24 +28,7 @@ class SearchRidesFragment : Fragment() {
     private lateinit var rideAdapter: RideAdapter
     private lateinit var sessionManager: SessionManager
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-    private var showDriverRides = false
-    
-    companion object {
-        private const val ARG_SHOW_DRIVER_RIDES = "show_driver_rides"
-        
-        fun newInstance(showDriverRides: Boolean = false): SearchRidesFragment {
-            return SearchRidesFragment().apply {
-                arguments = Bundle().apply {
-                    putBoolean(ARG_SHOW_DRIVER_RIDES, showDriverRides)
-                }
-            }
-        }
-    }
-    
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        showDriverRides = arguments?.getBoolean(ARG_SHOW_DRIVER_RIDES, false) ?: false
-    }
+    private var selectedGenderFilter: String? = null
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -63,38 +46,21 @@ class SearchRidesFragment : Fragment() {
         
         setupRecyclerView()
         setupDatePicker()
-        
-        if (showDriverRides) {
-            // Hide search form and show driver's rides
-            binding.searchCard.visibility = View.GONE
-            loadDriverRides()
-        } else {
-            loadAllRides()
-        }
+        setupGenderFilter()
+        loadAllRides()
         
         binding.btnSearch.setOnClickListener {
             val from = binding.etFrom.text.toString().trim()
             val to = binding.etTo.text.toString().trim()
             val date = binding.etDate.text.toString().trim()
             
-            if (from.isNotEmpty() || to.isNotEmpty() || date.isNotEmpty()) {
-                searchRides(from, to, date)
-            } else {
-                Toast.makeText(context, "Please fill at least one field to search", Toast.LENGTH_SHORT).show()
-            }
+            searchRides(from, to, date)
         }
     }
     
     private fun setupRecyclerView() {
         rideAdapter = RideAdapter(emptyList()) { ride ->
-            if (showDriverRides) {
-                // For driver's own rides, show details or manage
-                Toast.makeText(context, "Ride details: ${ride.from} → ${ride.to}", 
-                    Toast.LENGTH_SHORT).show()
-            } else {
-                // For passengers, book the ride
-                bookRide(ride)
-            }
+            bookRide(ride)
         }
         binding.rvRides.apply {
             layoutManager = LinearLayoutManager(context)
@@ -120,7 +86,24 @@ class SearchRidesFragment : Fragment() {
         }
     }
     
+    private fun setupGenderFilter() {
+        val genders = arrayOf("Any", "Male Driver", "Female Driver")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, genders)
+        binding.spinnerGenderFilter.setAdapter(adapter)
+        binding.spinnerGenderFilter.setText("Any", false)
+        
+        binding.spinnerGenderFilter.setOnItemClickListener { _, _, position, _ ->
+            selectedGenderFilter = when (position) {
+                1 -> "MALE"
+                2 -> "FEMALE"
+                else -> null
+            }
+        }
+    }
+    
     private fun loadAllRides() {
+        binding.progressBar.visibility = View.VISIBLE
+        
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.getAllRides()
@@ -128,79 +111,26 @@ class SearchRidesFragment : Fragment() {
                     val rides = response.body()!!
                     if (rides.isNotEmpty()) {
                         rideAdapter.updateRides(rides)
+                        binding.tvNoResults.visibility = View.GONE
                     } else {
-                        loadSampleRides()
+                        binding.tvNoResults.visibility = View.VISIBLE
                     }
                 } else {
-                    loadSampleRides()
+                    binding.tvNoResults.visibility = View.VISIBLE
+                    Toast.makeText(context, "Failed to load rides", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                loadSampleRides()
+                binding.tvNoResults.visibility = View.VISIBLE
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
             }
         }
-    }
-    
-    private fun loadDriverRides() {
-        val driverId = sessionManager.getUserId()
-        if (driverId.isEmpty()) {
-            loadSampleRides()
-            return
-        }
-        
-        lifecycleScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getDriverRides(driverId)
-                if (response.isSuccessful && response.body() != null) {
-                    val rides = response.body()!!
-                    if (rides.isNotEmpty()) {
-                        rideAdapter.updateRides(rides)
-                    } else {
-                        Toast.makeText(context, "No rides published yet", Toast.LENGTH_SHORT).show()
-                    }
-                } else {
-                    Toast.makeText(context, "Failed to load your rides", Toast.LENGTH_SHORT).show()
-                }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    private fun loadSampleRides() {
-        // Load sample rides for demo
-        val sampleRides = listOf(
-            Ride(
-                id = "demo_1",
-                departureCity = City("Tunis", "1000"),
-                destinationCity = City("Sousse", "4000"),
-                date = "2025-12-01",
-                availableSeats = 3,
-                pricePerSeat = 25.0,
-                driverId = "driver_1"
-            ),
-            Ride(
-                id = "demo_2",
-                departureCity = City("Tunis", "1000"),
-                destinationCity = City("Sfax", "3000"),
-                date = "2025-12-01",
-                availableSeats = 2,
-                pricePerSeat = 30.0,
-                driverId = "driver_2"
-            ),
-            Ride(
-                id = "demo_3",
-                departureCity = City("Sousse", "4000"),
-                destinationCity = City("Monastir", "5000"),
-                date = "2025-12-02",
-                availableSeats = 4,
-                pricePerSeat = 15.0,
-                driverId = "driver_3"
-            )
-        )
-        rideAdapter.updateRides(sampleRides)
     }
     
     private fun searchRides(from: String, to: String, date: String) {
+        binding.progressBar.visibility = View.VISIBLE
+        
         lifecycleScope.launch {
             try {
                 val response = RetrofitClient.apiService.searchRides(
@@ -210,16 +140,27 @@ class SearchRidesFragment : Fragment() {
                 )
                 if (response.isSuccessful && response.body() != null) {
                     val rides = response.body()!!
+                    
+                    // Note: Gender filter would require backend support to filter by driver gender
+                    // Currently shows all matching rides
+                    
                     if (rides.isNotEmpty()) {
                         rideAdapter.updateRides(rides)
+                        binding.tvNoResults.visibility = View.GONE
                     } else {
+                        rideAdapter.updateRides(emptyList())
+                        binding.tvNoResults.visibility = View.VISIBLE
                         Toast.makeText(context, getString(R.string.no_rides_found), Toast.LENGTH_SHORT).show()
                     }
                 } else {
+                    binding.tvNoResults.visibility = View.VISIBLE
                     Toast.makeText(context, getString(R.string.no_rides_found), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                binding.tvNoResults.visibility = View.VISIBLE
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.progressBar.visibility = View.GONE
             }
         }
     }
@@ -246,13 +187,13 @@ class SearchRidesFragment : Fragment() {
                 val response = RetrofitClient.apiService.createBooking(request)
                 if (response.isSuccessful) {
                     Toast.makeText(context, getString(R.string.success_booking), Toast.LENGTH_SHORT).show()
+                    // Refresh rides to show updated seat count
+                    loadAllRides()
                 } else {
-                    Toast.makeText(context, "Booking failed", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Booking failed: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Demo mode - just show success
-                Toast.makeText(context, getString(R.string.success_booking) + " (Demo)", 
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }

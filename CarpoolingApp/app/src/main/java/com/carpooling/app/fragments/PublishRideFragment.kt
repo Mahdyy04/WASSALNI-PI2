@@ -141,12 +141,10 @@ class PublishRideFragment : Fragment() {
                     Toast.makeText(context, getString(R.string.success_publish), Toast.LENGTH_SHORT).show()
                     clearForm()
                 } else {
-                    Toast.makeText(context, "Failed to publish ride", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Failed to publish ride: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Demo mode
-                Toast.makeText(context, getString(R.string.success_publish) + " (Demo)", Toast.LENGTH_SHORT).show()
-                clearForm()
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.btnPublish.isEnabled = true
             }

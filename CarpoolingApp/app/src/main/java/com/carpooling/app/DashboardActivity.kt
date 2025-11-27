@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.carpooling.app.databinding.ActivityDashboardBinding
 import com.carpooling.app.fragments.MyBookingsFragment
+import com.carpooling.app.fragments.MyRidesFragment
 import com.carpooling.app.fragments.PendingBookingsFragment
 import com.carpooling.app.fragments.PublishRideFragment
 import com.carpooling.app.fragments.SearchRidesFragment
@@ -17,6 +18,7 @@ class DashboardActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var sessionManager: SessionManager
+    private var userRole: String = "PASSENGER"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,17 +28,22 @@ class DashboardActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         
         val user = sessionManager.getUser()
+        userRole = user.role
         binding.tvWelcome.text = getString(R.string.welcome) + ", ${user.displayName}!"
         
-        setupTabs(user.role)
+        setupTabs(userRole)
         
         binding.btnLogout.setOnClickListener {
             logout()
         }
         
-        // Load default fragment
+        // Load default fragment based on role
         if (savedInstanceState == null) {
-            loadFragment(SearchRidesFragment())
+            if (userRole == "DRIVER") {
+                loadFragment(MyRidesFragment())
+            } else {
+                loadFragment(SearchRidesFragment())
+            }
         }
     }
     
@@ -48,34 +55,31 @@ class DashboardActivity : AppCompatActivity() {
     }
     
     private fun setupTabs(role: String) {
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.search_rides))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_bookings))
+        binding.tabLayout.removeAllTabs()
         
         if (role == "DRIVER") {
-            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.publish_ride))
+            // Driver tabs: My Rides, Pending Requests, Publish Ride
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_rides))
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.pending_requests))
+            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.publish_ride))
+        } else {
+            // Passenger tabs: Search Rides, My Bookings
+            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.search_rides))
+            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_bookings))
         }
         
         binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                when (tab?.position) {
-                    0 -> loadFragment(SearchRidesFragment())
-                    1 -> loadFragment(MyBookingsFragment())
-                    2 -> {
-                        if (role == "DRIVER") {
-                            loadFragment(PublishRideFragment())
-                        }
+                if (role == "DRIVER") {
+                    when (tab?.position) {
+                        0 -> loadFragment(MyRidesFragment())
+                        1 -> loadFragment(PendingBookingsFragment())
+                        2 -> loadFragment(PublishRideFragment())
                     }
-                    3 -> {
-                        if (role == "DRIVER") {
-                            loadFragment(SearchRidesFragment.newInstance(showDriverRides = true))
-                        }
-                    }
-                    4 -> {
-                        if (role == "DRIVER") {
-                            loadFragment(PendingBookingsFragment())
-                        }
+                } else {
+                    when (tab?.position) {
+                        0 -> loadFragment(SearchRidesFragment())
+                        1 -> loadFragment(MyBookingsFragment())
                     }
                 }
             }
