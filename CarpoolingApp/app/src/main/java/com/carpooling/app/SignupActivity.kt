@@ -18,6 +18,7 @@ class SignupActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignupBinding
     private lateinit var sessionManager: SessionManager
     private var selectedRole = "PASSENGER"
+    private var selectedGender = "MALE"
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,14 +28,15 @@ class SignupActivity : AppCompatActivity() {
         sessionManager = SessionManager(this)
         
         setupRoleSpinner()
+        setupGenderSpinner()
         
         binding.btnSignup.setOnClickListener {
-            val name = binding.etName.text.toString().trim()
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
+            val phoneNumber = binding.etPhone.text.toString().trim()
             
-            if (validateInput(name, email, password)) {
-                signupUser(name, email, password, selectedRole)
+            if (validateInput(email, password, phoneNumber)) {
+                signupUser(email, password, phoneNumber, selectedRole, selectedGender)
             }
         }
         
@@ -55,11 +57,18 @@ class SignupActivity : AppCompatActivity() {
         }
     }
     
-    private fun validateInput(name: String, email: String, password: String): Boolean {
-        if (name.isEmpty()) {
-            binding.etName.error = getString(R.string.error_empty_field)
-            return false
+    private fun setupGenderSpinner() {
+        val genders = arrayOf("Male", "Female")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, genders)
+        binding.spinnerGender.setAdapter(adapter)
+        binding.spinnerGender.setText("Male", false)
+        
+        binding.spinnerGender.setOnItemClickListener { _, _, position, _ ->
+            selectedGender = if (position == 0) "MALE" else "FEMALE"
         }
+    }
+    
+    private fun validateInput(email: String, password: String, phoneNumber: String): Boolean {
         if (email.isEmpty()) {
             binding.etEmail.error = getString(R.string.error_empty_field)
             return false
@@ -76,17 +85,32 @@ class SignupActivity : AppCompatActivity() {
             binding.etPassword.error = "Password must be at least 6 characters"
             return false
         }
+        if (phoneNumber.isEmpty()) {
+            binding.etPhone.error = getString(R.string.error_empty_field)
+            return false
+        }
         return true
     }
     
-    private fun signupUser(name: String, email: String, password: String, role: String) {
+    private fun signupUser(email: String, password: String, phoneNumber: String, role: String, gender: String) {
         binding.btnSignup.isEnabled = false
         
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.apiService.signup(
-                    SignupRequest(name, email, password, role)
+                val request = SignupRequest(
+                    email = email,
+                    password = password,
+                    phoneNumber = phoneNumber,
+                    gender = gender,
+                    userType = role,
+                    // Optional driver fields
+                    licenseNumber = null,
+                    vehicleNumber = null,
+                    vehiclePlate = null,
+                    preferredPaymentMethod = if (role == "PASSENGER") "CASH" else null
                 )
+                
+                val response = RetrofitClient.apiService.signup(request)
                 
                 if (response.isSuccessful && response.body() != null) {
                     val user = response.body()!!
@@ -98,38 +122,34 @@ class SignupActivity : AppCompatActivity() {
                     finish()
                 } else {
                     // For demo purposes, create a mock user if API fails
-                    val mockUser = User(
-                        id = "1",
-                        name = name,
-                        email = email,
-                        role = role,
-                        token = "mock_token"
-                    )
-                    sessionManager.saveUser(mockUser)
-                    Toast.makeText(this@SignupActivity, 
-                        "Signup successful (Demo Mode)", Toast.LENGTH_SHORT).show()
-                    
-                    startActivity(Intent(this@SignupActivity, DashboardActivity::class.java))
-                    finish()
+                    createDemoUser(email, phoneNumber, role, gender)
                 }
             } catch (e: Exception) {
                 // Fallback to demo mode
-                val mockUser = User(
-                    id = "1",
-                    name = name,
-                    email = email,
-                    role = role,
-                    token = "mock_token"
-                )
-                sessionManager.saveUser(mockUser)
-                Toast.makeText(this@SignupActivity, 
-                    "Signup successful (Demo Mode)", Toast.LENGTH_SHORT).show()
-                
-                startActivity(Intent(this@SignupActivity, DashboardActivity::class.java))
-                finish()
+                createDemoUser(email, phoneNumber, role, gender)
             } finally {
                 binding.btnSignup.isEnabled = true
             }
         }
+    }
+    
+    private fun createDemoUser(email: String, phoneNumber: String, role: String, gender: String) {
+        val demoToken = "demo_token_" + System.currentTimeMillis()
+        val mockUser = User(
+            id = "demo_" + System.currentTimeMillis(),
+            email = email,
+            phoneNumber = phoneNumber,
+            gender = gender,
+            role = role,
+            token = demoToken,
+            isBanned = false
+        )
+        sessionManager.saveUser(mockUser, demoToken)
+        RetrofitClient.setAuthToken(demoToken)
+        Toast.makeText(this@SignupActivity, 
+            "Signup successful (Demo Mode)", Toast.LENGTH_SHORT).show()
+        
+        startActivity(Intent(this@SignupActivity, DashboardActivity::class.java))
+        finish()
     }
 }

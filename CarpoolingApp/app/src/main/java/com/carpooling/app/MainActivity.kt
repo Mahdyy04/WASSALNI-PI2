@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.carpooling.app.databinding.ActivityMainBinding
+import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
 
 class MainActivity : AppCompatActivity() {
@@ -18,6 +19,11 @@ class MainActivity : AppCompatActivity() {
         
         // Check if user is already logged in
         if (sessionManager.isLoggedIn()) {
+            // Restore auth token for API requests
+            val token = sessionManager.getToken()
+            if (token.isNotEmpty()) {
+                RetrofitClient.setAuthToken(token)
+            }
             startActivity(Intent(this, DashboardActivity::class.java))
             finish()
             return
