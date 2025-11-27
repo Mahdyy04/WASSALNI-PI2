@@ -1,0 +1,22 @@
+#!/bin/sh
+# Gradle wrapper script for Unix/Linux/MacOS
+# This is a simplified version for the Android project
+
+GRADLE_USER_HOME="${GRADLE_USER_HOME:-$HOME/.gradle}"
+GRADLE_VERSION="8.2"
+GRADLE_ZIP="gradle-${GRADLE_VERSION}-bin.zip"
+GRADLE_URL="https://services.gradle.org/distributions/${GRADLE_ZIP}"
+GRADLE_DIR="$GRADLE_USER_HOME/wrapper/dists/gradle-${GRADLE_VERSION}-bin"
+
+if [ ! -d "$GRADLE_DIR" ]; then
+    echo "Downloading Gradle ${GRADLE_VERSION}..."
+    mkdir -p "$GRADLE_DIR"
+fi
+
+# Use system gradle if available, otherwise download
+if command -v gradle &> /dev/null; then
+    gradle "$@"
+else
+    echo "Please install Gradle or use Android Studio to build this project"
+    exit 1
+fi

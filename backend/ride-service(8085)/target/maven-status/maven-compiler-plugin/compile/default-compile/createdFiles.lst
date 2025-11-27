@@ -1,0 +1,9 @@
+com\example\ride\DemoApplication.class
+com\example\ride\repository\RideRepository.class
+com\example\ride\service\RideService.class
+com\example\ride\entities\City.class
+com\example\ride\controller\RideController.class
+com\example\ride\entities\Ride.class
+com\example\ride\enums\RideStatus.class
+com\example\ride\service\RideServiceImpl.class
+com\example\ride\dto\CreateRideRequest.class
