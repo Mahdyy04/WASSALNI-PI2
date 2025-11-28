@@ -99,4 +99,10 @@
     <string name="cancel">Cancel</string>
     <string name="error_no_seats">No seats available for this ride</string>
     <string name="error_too_many_seats">Cannot book more seats than available</string>
+    
+    <!-- Notifications -->
+    <string name="notifications">Notifications</string>
+    <string name="no_notifications">No notifications yet</string>
+    <string name="mark_all_read">Mark all as read</string>
+    <string name="notification_icon">Notification icon</string>
 </resources>

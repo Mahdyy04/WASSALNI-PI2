@@ -68,6 +68,7 @@ The Gateway uses Eureka discovery with the pattern `/{service-name}/api/{endpoin
 | Bookings | booking-service | 8082 | `/booking-service/api/bookings/*` |
 | Reviews | review-service | 8086 | `/review-service/api/reviews/*` |
 | Reports | report-service | 8087 | `/report-service/api/reports/*` |
+| Notifications | notification-service | 8088 | `/notification-service/api/notifications/*` |
 | Eureka | eureka-server | 8083 | Service discovery |
 
 ### Example API Calls
@@ -299,6 +300,36 @@ Response: Report object
 GET /report-service/api/reports/status/{status}
 ```
 
+#### Notification Endpoints
+
+```
+GET /notification-service/api/notifications/user/{userId}
+Response: List of all notifications for user
+
+GET /notification-service/api/notifications/user/{userId}/unread
+Response: List of unread notifications
+
+GET /notification-service/api/notifications/user/{userId}/count
+Response: { "count": 3 }
+
+PUT /notification-service/api/notifications/{notificationId}/read
+Response: "Notification marked as read"
+
+PUT /notification-service/api/notifications/user/{userId}/read-all
+Response: "All notifications marked as read"
+
+POST /notification-service/api/notifications/create
+Body: {
+  "userId": "...",
+  "type": "BOOKING_REQUEST|BOOKING_ACCEPTED|BOOKING_REJECTED",
+  "title": "...",
+  "message": "...",
+  "rideId": "...",
+  "bookingId": "..."
+}
+Response: Notification object
+```
+
 ## Role-Based Features
 
 ### Passenger Dashboard (2 tabs)
@@ -350,6 +381,11 @@ GET /report-service/api/reports/status/{status}
 - [x] Pull-to-refresh for bookings
 - [x] Driver identity verification fields
 - [x] Hide rides with no available seats
+- [x] **In-app Notifications**
+  - Notification bell icon with unread badge in dashboard
+  - Driver receives notification when passenger books their ride
+  - Passenger receives notification when driver accepts/rejects booking
+  - Mark individual or all notifications as read
 
 ## API Ready (Models implemented)
 
@@ -357,16 +393,17 @@ GET /report-service/api/reports/status/{status}
 - [x] Reports API integration
 - [x] User ban/unban API
 - [x] Average ratings API
+- [x] Notifications API integration
 
 ## Future Enhancements
 
 - [ ] Implement reviews UI
 - [ ] Implement reports UI
-- [ ] Add real-time notifications
 - [ ] Add maps integration for route visualization
 - [ ] Add photo upload for user profiles
 - [ ] Implement chat between drivers and passengers
 - [ ] Add payment integration
+- [ ] Push notifications (Firebase Cloud Messaging)
 
 ## License
 

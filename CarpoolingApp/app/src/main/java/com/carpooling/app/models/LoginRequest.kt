@@ -135,3 +135,25 @@ data class CreateReportRequest(
     val reason: String, // INAPPROPRIATE_BEHAVIOR, NO_SHOW, UNSAFE_DRIVING, OTHER
     val description: String
 )
+
+/**
+ * Notification model matching backend's Notification structure
+ */
+data class Notification(
+    val id: String = "",
+    val userId: String = "",
+    val type: String = "", // BOOKING_REQUEST, BOOKING_ACCEPTED, BOOKING_REJECTED
+    val title: String = "",
+    val message: String = "",
+    val rideId: String = "",
+    val bookingId: String = "",
+    val isRead: Boolean = false,
+    val createdAt: String = ""
+)
+
+/**
+ * Response model for unread notification count
+ */
+data class NotificationCountResponse(
+    val count: Long = 0
+)
