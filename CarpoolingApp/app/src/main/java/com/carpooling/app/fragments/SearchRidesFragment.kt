@@ -242,7 +242,7 @@ class SearchRidesFragment : Fragment() {
         
         fun updateUI() {
             tvSeatCount.text = selectedSeats.toString()
-            val totalPrice = ride.pricePerSeat * selectedSeats
+            val totalPrice = ride.price * selectedSeats
             tvTotalPrice.text = "Total: ${priceFormat.format(totalPrice)}"
             btnDecrease.isEnabled = selectedSeats > 1
             btnIncrease.isEnabled = selectedSeats < maxSeats

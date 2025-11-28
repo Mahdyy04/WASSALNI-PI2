@@ -10,7 +10,7 @@ public class CreateRideRequest {
     private City departureCity;
     private City destinationCity;
     private LocalDate departureDate;
-    private Integer availableSeats;
-    private Double pricePerSeat;
+    private Integer availableSeats = 1;
+    private Double pricePerSeat = 0.0;
     private String driverId;
 }

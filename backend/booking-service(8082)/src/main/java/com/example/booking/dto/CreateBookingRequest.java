@@ -6,5 +6,5 @@ import lombok.Data;
 public class CreateBookingRequest {
     private String rideId;
     private String passengerId;
-    private Integer seats ;
+    private Integer seats = 1;  // Default to 1 seat if not specified
 }

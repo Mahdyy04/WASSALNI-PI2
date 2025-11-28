@@ -20,8 +20,10 @@ public class RideServiceImpl implements RideService {
         ride.setDepartureCity(request.getDepartureCity());
         ride.setDestinationCity(request.getDestinationCity());
         ride.setDepartureDate(request.getDepartureDate());
-        ride.setAvailableSeats(request.getAvailableSeats());
-        ride.setPricePerSeat(request.getPricePerSeat());
+        // Ensure seats has a valid value
+        ride.setAvailableSeats(request.getAvailableSeats() != null ? request.getAvailableSeats() : 1);
+        // Ensure price has a valid value
+        ride.setPricePerSeat(request.getPricePerSeat() != null ? request.getPricePerSeat() : 0.0);
         ride.setDriverId(request.getDriverId());
 
         return rideRepository.save(ride);

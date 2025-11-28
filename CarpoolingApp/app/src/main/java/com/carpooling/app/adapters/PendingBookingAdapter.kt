@@ -24,7 +24,7 @@ class PendingBookingAdapter(
             if (ride != null) {
                 binding.tvRoute.text = "${ride.from} → ${ride.to}"
                 binding.tvDate.text = "Date: ${ride.date}"
-                binding.tvPrice.text = priceFormat.format(ride.pricePerSeat * booking.seatsBooked)
+                binding.tvPrice.text = priceFormat.format(ride.price * booking.seatsBooked)
             } else {
                 binding.tvRoute.text = "Ride #${booking.rideId.take(8)}"
                 binding.tvDate.text = "Loading..."

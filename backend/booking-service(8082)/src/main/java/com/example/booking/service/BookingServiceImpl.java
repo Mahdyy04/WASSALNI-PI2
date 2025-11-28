@@ -26,7 +26,9 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = new Booking();
         booking.setRideId(request.getRideId());
         booking.setPassengerId(request.getPassengerId());
-        booking.setSeatsBooked(request.getSeats());
+        // Ensure seats is at least 1
+        int seats = (request.getSeats() != null && request.getSeats() > 0) ? request.getSeats() : 1;
+        booking.setSeatsBooked(seats);
         booking.setStatus(BookingStatus.PENDING);
 
         Booking saved = bookingRepository.save(booking);
@@ -61,6 +63,8 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
+        int seatsToDeduct = booking.getSeatsBooked() != null ? booking.getSeatsBooked() : 1;
+        
         // Update booking status
         booking.setStatus(BookingStatus.ACCEPTED);
         booking.setUpdatedAt(LocalDateTime.now());
@@ -68,16 +72,19 @@ public class BookingServiceImpl implements BookingService {
 
         // Update available seats in ride service
         try {
+            System.out.println("Updating ride seats: rideId=" + booking.getRideId() + ", seatsToDeduct=" + seatsToDeduct);
             webClientBuilder.build()
                     .put()
                     .uri("http://ride-service/api/rides/{rideId}/seats?seatsToDeduct={seats}",
-                            booking.getRideId(), booking.getSeatsBooked())
+                            booking.getRideId(), seatsToDeduct)
                     .retrieve()
                     .bodyToMono(Object.class)
                     .block();
+            System.out.println("Successfully updated ride seats");
         } catch (Exception e) {
             // Log error but don't fail the booking acceptance
             System.err.println("Warning: Could not update ride seats: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

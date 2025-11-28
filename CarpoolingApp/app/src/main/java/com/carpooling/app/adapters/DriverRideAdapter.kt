@@ -22,7 +22,7 @@ class DriverRideAdapter(
             binding.tvRoute.text = "${ride.from} → ${ride.to}"
             binding.tvDate.text = "Date: ${ride.date}"
             binding.tvSeats.text = "Available seats: ${ride.availableSeats}"
-            binding.tvPrice.text = priceFormat.format(ride.pricePerSeat)
+            binding.tvPrice.text = priceFormat.format(ride.price)
             binding.tvStatus.text = "Status: ${ride.status}"
             
             // Set status color
