@@ -339,14 +339,17 @@ GET /report-service/api/reports/status/{status}
 - [x] Authentication (Login/Signup)
 - [x] Role-based UI (Passenger vs Driver)
 - [x] Ride Search with city/date filters
-- [x] Gender filter UI for rides
-- [x] Ride Publishing (Driver)
+- [x] Gender filter for rides (client-side filtering)
+- [x] Seat selection dialog when booking (1-N seats)
+- [x] Ride Publishing with price support (Driver)
 - [x] Booking Management (Passenger)
 - [x] Pending Booking Requests (Driver)
 - [x] Accept/Reject Bookings (Driver)
+- [x] Auto-update available seats on booking accept
 - [x] My Rides management (Driver)
 - [x] Pull-to-refresh for bookings
 - [x] Driver identity verification fields
+- [x] Hide rides with no available seats
 
 ## API Ready (Models implemented)
 

@@ -21,6 +21,7 @@ public class RideServiceImpl implements RideService {
         ride.setDestinationCity(request.getDestinationCity());
         ride.setDepartureDate(request.getDepartureDate());
         ride.setAvailableSeats(request.getAvailableSeats());
+        ride.setPricePerSeat(request.getPricePerSeat());
         ride.setDriverId(request.getDriverId());
 
         return rideRepository.save(ride);
@@ -79,5 +80,26 @@ public class RideServiceImpl implements RideService {
     public Ride getRideById(String rideId) {
         return rideRepository.findById(rideId)
                 .orElseThrow(() -> new RuntimeException("Ride not found"));
+    }
+
+    @Override
+    public Ride updateAvailableSeats(String rideId, int seatsToDeduct) {
+        Ride ride = rideRepository.findById(rideId)
+                .orElseThrow(() -> new RuntimeException("Ride not found"));
+        
+        int newSeats = ride.getAvailableSeats() - seatsToDeduct;
+        if (newSeats < 0) {
+            throw new RuntimeException("Not enough seats available");
+        }
+        
+        ride.setAvailableSeats(newSeats);
+        ride.setUpdatedAt(java.time.LocalDateTime.now());
+        
+        // If no seats left, mark ride as completed
+        if (newSeats == 0) {
+            ride.setStatus(com.example.ride.enums.RideStatus.COMPLETED);
+        }
+        
+        return rideRepository.save(ride);
     }
 }

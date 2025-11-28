@@ -50,4 +50,9 @@ public class RideController {
     public Ride getRideById(@PathVariable String rideId) {
         return rideService.getRideById(rideId);
     }
+
+    @PutMapping("/{rideId}/seats")
+    public Ride updateAvailableSeats(@PathVariable String rideId, @RequestParam int seatsToDeduct) {
+        return rideService.updateAvailableSeats(rideId, seatsToDeduct);
+    }
 }

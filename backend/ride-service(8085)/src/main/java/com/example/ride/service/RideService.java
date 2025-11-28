@@ -12,4 +12,5 @@ public interface RideService {
     List<Ride> searchRides(String departureCity, String destinationCity, java.time.LocalDate date);
     List<Ride> getAllRides();
     Ride getRideById(String rideId);
+    Ride updateAvailableSeats(String rideId, int seatsToDeduct);
 }

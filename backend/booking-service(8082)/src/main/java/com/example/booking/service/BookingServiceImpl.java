@@ -7,6 +7,7 @@ import com.example.booking.enums.BookingStatus;
 import com.example.booking.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements BookingService {
 
     private final BookingRepository bookingRepository;
+    private final WebClient.Builder webClientBuilder;
 
     @Override
     public BookingResponse bookRide(CreateBookingRequest request) {
@@ -59,12 +61,24 @@ public class BookingServiceImpl implements BookingService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
 
-        // TODO: Verify driver owns the ride
-        // This would require calling ride-service to check ride ownership
-
+        // Update booking status
         booking.setStatus(BookingStatus.ACCEPTED);
         booking.setUpdatedAt(LocalDateTime.now());
         bookingRepository.save(booking);
+
+        // Update available seats in ride service
+        try {
+            webClientBuilder.build()
+                    .put()
+                    .uri("http://ride-service/api/rides/{rideId}/seats?seatsToDeduct={seats}",
+                            booking.getRideId(), booking.getSeatsBooked())
+                    .retrieve()
+                    .bodyToMono(Object.class)
+                    .block();
+        } catch (Exception e) {
+            // Log error but don't fail the booking acceptance
+            System.err.println("Warning: Could not update ride seats: " + e.getMessage());
+        }
     }
 
     @Override

@@ -91,4 +91,12 @@
     <string name="success_report">Report submitted!</string>
     <string name="loading">Loading...</string>
     <string name="retry">Retry</string>
+    
+    <!-- Seat Selection Dialog -->
+    <string name="select_seats">Select Number of Seats</string>
+    <string name="seats_to_book">Seats to book:</string>
+    <string name="confirm_booking">Confirm Booking</string>
+    <string name="cancel">Cancel</string>
+    <string name="error_no_seats">No seats available for this ride</string>
+    <string name="error_too_many_seats">Cannot book more seats than available</string>
 </resources>
