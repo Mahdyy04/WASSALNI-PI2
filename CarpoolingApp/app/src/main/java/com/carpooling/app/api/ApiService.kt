@@ -17,20 +17,7 @@ import com.carpooling.app.models.User
 import retrofit2.Response
 import retrofit2.http.*
 
-/**
- * API Service interface for the Wassalni carpooling app.
- * 
- * Routes through Spring Cloud Gateway with Eureka discovery:
- * - Gateway: http://10.0.2.2:8084 (Android emulator)
- * - Pattern: /{service-name}/api/{endpoint}
- * 
- * Services:
- * - authentication-service (port 8081): /authentication-service/api/auth/*
- * - ride-service (port 8085): /ride-service/api/rides/*
- * - booking-service (port 8082): /booking-service/api/bookings/*
- * - review-service (port 8086): /review-service/api/reviews/*
- * - report-service (port 8087): /report-service/api/reports/*
- */
+
 interface ApiService {
     
     // ==================== Authentication ====================
@@ -166,3 +153,19 @@ interface ApiService {
         @Query("status") status: String
     ): Response<Report>
 }
+
+
+/*
+ * API Service interface for the Wassalni carpooling app.
+ *
+ * Routes through Spring Cloud Gateway with Eureka discovery:
+ * - Gateway: http://10.0.2.2:8084 (Android emulator)
+ * - Pattern: /{service-name}/api/{endpoint}
+ *
+ * Services:
+ * - authentication-service (port 8081): /authentication-service/api/auth/*
+ * - ride-service (port 8085): /ride-service/api/rides/*
+ * - booking-service (port 8082): /booking-service/api/bookings/*
+ * - review-service (port 8086): /review-service/api/reviews/*
+ * - report-service (port 8087): /report-service/api/reports/*
+ */
