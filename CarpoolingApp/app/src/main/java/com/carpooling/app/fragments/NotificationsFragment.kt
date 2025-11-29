@@ -190,6 +190,32 @@ class NotificationsFragment : Fragment() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        
+        // Load reports received by this driver
+        try {
+            val reportResponse = RetrofitClient.apiService.getReportsByReportedUser(driverId)
+            if (reportResponse.isSuccessful) {
+                val reports = reportResponse.body() ?: emptyList()
+                
+                for (report in reports) {
+                    notifications.add(
+                        Notification(
+                            id = report.id,
+                            userId = driverId,
+                            type = "REPORT_RECEIVED",
+                            title = "⚠️ Warning: You have been reported",
+                            message = "An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.",
+                            rideId = report.rideId,
+                            bookingId = "",
+                            isRead = false, // Reports are shown as unread to get driver's attention
+                            createdAt = ""
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     /**

@@ -96,15 +96,34 @@
             style="@style/Widget.AppCompat.RatingBar.Small"
             android:layout_marginBottom="8dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnReview"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:text="@string/write_review"
-            android:textSize="14sp"
-            app:cornerRadius="8dp"
-            app:icon="@android:drawable/ic_menu_edit"
-            style="@style/Widget.Material3.Button" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="start">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReview"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="@string/write_review"
+                android:textSize="14sp"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_menu_edit"
+                style="@style/Widget.Material3.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnReport"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="@string/report_driver"
+                android:textSize="14sp"
+                android:layout_marginStart="8dp"
+                app:cornerRadius="8dp"
+                app:backgroundTint="@color/status_danger"
+                style="@style/Widget.Material3.Button" />
+
+        </LinearLayout>
 
         <TextView
             android:id="@+id/tvReviewed"

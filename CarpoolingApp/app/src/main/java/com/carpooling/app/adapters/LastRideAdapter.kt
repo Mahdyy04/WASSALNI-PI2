@@ -12,15 +12,17 @@ import java.text.NumberFormat
 import java.util.Locale
 
 /**
- * Adapter for displaying confirmed rides with review functionality.
+ * Adapter for displaying confirmed rides with review and report functionality.
  * 
  * Shows rides where booking status is ACCEPTED, with a review button
- * that is disabled once the user has already reviewed that ride.
+ * that is disabled once the user has already reviewed that ride,
+ * and a report button to report the driver.
  */
 class LastRideAdapter(
     private var bookings: List<Booking>,
     private var reviewedRideIds: Set<String>,
-    private val onReviewClick: (Booking) -> Unit
+    private val onReviewClick: (Booking) -> Unit,
+    private val onReportClick: (Booking) -> Unit
 ) : RecyclerView.Adapter<LastRideAdapter.LastRideViewHolder>() {
     
     companion object {
@@ -67,6 +69,11 @@ class LastRideAdapter(
                 binding.btnReview.setOnClickListener {
                     onReviewClick(booking)
                 }
+            }
+            
+            // Report button is always visible for confirmed rides
+            binding.btnReport.setOnClickListener {
+                onReportClick(booking)
             }
         }
     }

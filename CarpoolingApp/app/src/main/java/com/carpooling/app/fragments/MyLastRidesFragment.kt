@@ -5,30 +5,41 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carpooling.app.R
 import com.carpooling.app.adapters.LastRideAdapter
+import com.carpooling.app.databinding.DialogReportBinding
 import com.carpooling.app.databinding.DialogReviewBinding
 import com.carpooling.app.databinding.FragmentMyLastRidesBinding
 import com.carpooling.app.models.Booking
+import com.carpooling.app.models.CreateReportRequest
 import com.carpooling.app.models.CreateReviewRequest
 import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
 import kotlinx.coroutines.launch
 
 /**
- * Fragment for passengers to see their confirmed (accepted) rides and leave reviews.
+ * Fragment for passengers to see their confirmed (accepted) rides and leave reviews or reports.
  * 
- * Shows only ACCEPTED bookings where the passenger can rate the driver.
+ * Shows only ACCEPTED bookings where the passenger can rate or report the driver.
  */
 class MyLastRidesFragment : Fragment() {
     
     companion object {
         /** Number of characters to display when showing truncated ride ID */
         private const val RIDE_ID_DISPLAY_LENGTH = 8
+        
+        /** Report reason options matching backend ReportReason enum */
+        private val REPORT_REASONS = arrayOf(
+            "INAPPROPRIATE_BEHAVIOR",
+            "NO_SHOW",
+            "UNSAFE_DRIVING",
+            "OTHER"
+        )
     }
     
     private var _binding: FragmentMyLastRidesBinding? = null
@@ -67,6 +78,9 @@ class MyLastRidesFragment : Fragment() {
             reviewedRideIds = reviewedRideIds,
             onReviewClick = { booking ->
                 showReviewDialog(booking)
+            },
+            onReportClick = { booking ->
+                showReportDialog(booking)
             }
         )
         binding.rvLastRides.apply {
@@ -218,6 +232,72 @@ class MyLastRidesFragment : Fragment() {
                     loadReviewedRides()
                 } else {
                     Toast.makeText(context, "Failed to submit review: ${response.message()}", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    private fun showReportDialog(booking: Booking) {
+        val dialogBinding = DialogReportBinding.inflate(LayoutInflater.from(context))
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogBinding.root)
+            .create()
+        
+        val ride = booking.ride
+        if (ride != null) {
+            dialogBinding.tvRideInfo.text = "${ride.from} → ${ride.to} on ${ride.date}"
+        } else {
+            dialogBinding.tvRideInfo.text = "Ride #${booking.rideId.take(RIDE_ID_DISPLAY_LENGTH)}"
+        }
+        
+        // Setup spinner with report reasons
+        val reasonDisplayNames = arrayOf(
+            getString(R.string.report_reason_inappropriate),
+            getString(R.string.report_reason_no_show),
+            getString(R.string.report_reason_unsafe_driving),
+            getString(R.string.report_reason_other)
+        )
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, reasonDisplayNames)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        dialogBinding.spinnerReason.adapter = adapter
+        
+        dialogBinding.btnCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+        
+        dialogBinding.btnSubmit.setOnClickListener {
+            val selectedPosition = dialogBinding.spinnerReason.selectedItemPosition
+            val reason = REPORT_REASONS[selectedPosition]
+            val description = dialogBinding.etDescription.text.toString().trim()
+            
+            dialog.dismiss()
+            submitReport(booking, reason, description)
+        }
+        
+        dialog.show()
+    }
+    
+    private fun submitReport(booking: Booking, reason: String, description: String) {
+        val passengerId = sessionManager.getUserId()
+        val driverId = booking.ride?.driverId ?: return
+        
+        lifecycleScope.launch {
+            try {
+                val request = CreateReportRequest(
+                    reporterId = passengerId,
+                    reportedUserId = driverId,
+                    rideId = booking.rideId,
+                    reason = reason,
+                    description = description
+                )
+                
+                val response = RetrofitClient.apiService.createReport(request)
+                if (response.isSuccessful) {
+                    Toast.makeText(context, getString(R.string.report_submitted), Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "Failed to submit report: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()

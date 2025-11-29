@@ -86,6 +86,17 @@
     <string name="report_reason">Reason</string>
     <string name="report_description">Description</string>
     <string name="submit_report">Submit Report</string>
+    <string name="report_driver">Report</string>
+    <string name="report_driver_title">Report Driver</string>
+    <string name="select_reason">Select a reason for your report</string>
+    <string name="report_description_hint">Provide additional details (optional)</string>
+    <string name="report_reason_inappropriate">Inappropriate Behavior</string>
+    <string name="report_reason_no_show">No Show</string>
+    <string name="report_reason_unsafe_driving">Unsafe Driving</string>
+    <string name="report_reason_other">Other</string>
+    <string name="report_submitted">Report submitted successfully</string>
+    <string name="report_warning_title">Warning: You have been reported</string>
+    <string name="report_warning_message">An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.</string>
     
     <!-- Common -->
     <string name="error_empty_field">This field cannot be empty</string>

@@ -51,6 +51,7 @@ class NotificationAdapter(
                 "BOOKING_ACCEPTED" -> R.drawable.ic_notification_accepted
                 "BOOKING_REJECTED" -> R.drawable.ic_notification_rejected
                 "REVIEW_RECEIVED" -> R.drawable.ic_notification_review
+                "REPORT_RECEIVED" -> R.drawable.ic_notification_report
                 else -> R.drawable.ic_notification_default
             }
             iconView.setImageResource(iconRes)
