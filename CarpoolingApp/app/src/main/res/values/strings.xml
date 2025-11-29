@@ -98,6 +98,7 @@
     <string name="report_warning_title">Warning: You have been reported</string>
     <string name="report_warning_message">An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.</string>
     <string name="error_submit_report">Failed to submit report</string>
+    <string name="error_driver_info_unavailable">Unable to report: driver information not available</string>
     
     <!-- Common -->
     <string name="error_empty_field">This field cannot be empty</string>

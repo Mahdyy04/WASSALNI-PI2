@@ -284,7 +284,12 @@ class MyLastRidesFragment : Fragment() {
     
     private fun submitReport(booking: Booking, reason: String, description: String) {
         val passengerId = sessionManager.getUserId()
-        val driverId = booking.ride?.driverId ?: return
+        val driverId = booking.ride?.driverId
+        
+        if (driverId == null) {
+            Toast.makeText(context, getString(R.string.error_driver_info_unavailable), Toast.LENGTH_SHORT).show()
+            return
+        }
         
         lifecycleScope.launch {
             try {
