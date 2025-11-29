@@ -204,8 +204,8 @@ class NotificationsFragment : Fragment() {
                             id = report.id,
                             userId = driverId,
                             type = "REPORT_RECEIVED",
-                            title = context?.getString(R.string.report_warning_title) ?: "⚠️ Warning: You have been reported",
-                            message = context?.getString(R.string.report_warning_message) ?: "An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.",
+                            title = getString(R.string.report_warning_title),
+                            message = getString(R.string.report_warning_message),
                             rideId = report.rideId,
                             bookingId = "",
                             isRead = false, // Reports are shown as unread to get driver's attention
