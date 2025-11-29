@@ -5,21 +5,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.RatingBar
-import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carpooling.app.R
 import com.carpooling.app.adapters.LastRideAdapter
+import com.carpooling.app.databinding.DialogReviewBinding
 import com.carpooling.app.databinding.FragmentMyLastRidesBinding
 import com.carpooling.app.models.Booking
 import com.carpooling.app.models.CreateReviewRequest
 import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
-import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 
 /**
@@ -28,6 +25,11 @@ import kotlinx.coroutines.launch
  * Shows only ACCEPTED bookings where the passenger can rate the driver.
  */
 class MyLastRidesFragment : Fragment() {
+    
+    companion object {
+        /** Number of characters to display when showing truncated ride ID */
+        private const val RIDE_ID_DISPLAY_LENGTH = 8
+    }
     
     private var _binding: FragmentMyLastRidesBinding? = null
     private val binding get() = _binding!!
@@ -161,31 +163,25 @@ class MyLastRidesFragment : Fragment() {
     }
     
     private fun showReviewDialog(booking: Booking) {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_review, null)
+        val dialogBinding = DialogReviewBinding.inflate(LayoutInflater.from(context))
         val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
+            .setView(dialogBinding.root)
             .create()
-        
-        val tvRideInfo = dialogView.findViewById<TextView>(R.id.tvRideInfo)
-        val ratingBar = dialogView.findViewById<RatingBar>(R.id.ratingBar)
-        val etComment = dialogView.findViewById<EditText>(R.id.etComment)
-        val btnCancel = dialogView.findViewById<MaterialButton>(R.id.btnCancel)
-        val btnSubmit = dialogView.findViewById<MaterialButton>(R.id.btnSubmit)
         
         val ride = booking.ride
         if (ride != null) {
-            tvRideInfo.text = "${ride.from} → ${ride.to} on ${ride.date}"
+            dialogBinding.tvRideInfo.text = "${ride.from} → ${ride.to} on ${ride.date}"
         } else {
-            tvRideInfo.text = "Ride #${booking.rideId.take(8)}"
+            dialogBinding.tvRideInfo.text = "Ride #${booking.rideId.take(RIDE_ID_DISPLAY_LENGTH)}"
         }
         
-        btnCancel.setOnClickListener {
+        dialogBinding.btnCancel.setOnClickListener {
             dialog.dismiss()
         }
         
-        btnSubmit.setOnClickListener {
-            val rating = ratingBar.rating.toInt()
-            val comment = etComment.text.toString().trim()
+        dialogBinding.btnSubmit.setOnClickListener {
+            val rating = dialogBinding.ratingBar.rating.toInt()
+            val comment = dialogBinding.etComment.text.toString().trim()
             
             if (rating < 1) {
                 Toast.makeText(context, "Please select a rating", Toast.LENGTH_SHORT).show()

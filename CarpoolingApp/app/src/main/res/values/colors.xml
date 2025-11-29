@@ -17,4 +17,9 @@
     <color name="text_secondary">#666666</color>
     <color name="button_secondary">#6c757d</color>
     <color name="notification_unread_bg">#E8F0FE</color>
+    
+    <!-- Status Colors -->
+    <color name="status_success">#28a745</color>
+    <color name="status_warning">#ffc107</color>
+    <color name="status_danger">#dc3545</color>
 </resources>

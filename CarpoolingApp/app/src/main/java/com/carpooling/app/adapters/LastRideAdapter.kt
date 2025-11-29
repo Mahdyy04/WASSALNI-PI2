@@ -3,7 +3,9 @@ package com.carpooling.app.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.carpooling.app.R
 import com.carpooling.app.databinding.ItemLastRideBinding
 import com.carpooling.app.models.Booking
 import java.text.NumberFormat
@@ -21,6 +23,11 @@ class LastRideAdapter(
     private val onReviewClick: (Booking) -> Unit
 ) : RecyclerView.Adapter<LastRideAdapter.LastRideViewHolder>() {
     
+    companion object {
+        /** Number of characters to display when showing truncated ride ID */
+        private const val RIDE_ID_DISPLAY_LENGTH = 8
+    }
+    
     private val priceFormat = NumberFormat.getCurrencyInstance(Locale.US)
     
     inner class LastRideViewHolder(private val binding: ItemLastRideBinding) : 
@@ -35,14 +42,14 @@ class LastRideAdapter(
                 binding.tvPrice.text = priceFormat.format(ride.price * booking.seatsBooked)
                 binding.tvPrice.visibility = View.VISIBLE
             } else {
-                binding.tvRoute.text = "Ride #${booking.rideId.take(8)}"
+                binding.tvRoute.text = "Ride #${booking.rideId.take(RIDE_ID_DISPLAY_LENGTH)}"
                 binding.tvDate.text = "Loading..."
                 binding.tvPrice.visibility = View.GONE
             }
             
             binding.tvSeats.text = "Seats booked: ${booking.seatsBooked}"
             binding.tvStatus.text = "Status: Confirmed ✓"
-            binding.tvStatus.setTextColor(android.graphics.Color.parseColor("#28a745"))
+            binding.tvStatus.setTextColor(ContextCompat.getColor(itemView.context, R.color.status_success))
             
             // Check if this ride has already been reviewed
             val isReviewed = reviewedRideIds.contains(booking.rideId)

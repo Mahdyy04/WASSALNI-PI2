@@ -131,8 +131,8 @@ class NotificationsFragment : Fragment() {
                 
                 for (booking in pendingBookings) {
                     val ride = getRideInfo(booking.rideId)
-                    val from = ride?.departureCity?.name ?: "Unknown"
-                    val to = ride?.destinationCity?.name ?: "Unknown"
+                    val from = ride?.from ?: "Unknown"
+                    val to = ride?.to ?: "Unknown"
                     
                     notifications.add(
                         Notification(
@@ -162,8 +162,8 @@ class NotificationsFragment : Fragment() {
                 
                 for (review in reviews) {
                     val ride = getRideInfo(review.rideId)
-                    val from = ride?.departureCity?.name ?: "Unknown"
-                    val to = ride?.destinationCity?.name ?: "Unknown"
+                    val from = ride?.from ?: "Unknown"
+                    val to = ride?.to ?: "Unknown"
                     
                     val stars = "⭐".repeat(review.rating)
                     val message = if (review.comment.isNotEmpty()) {
@@ -205,8 +205,8 @@ class NotificationsFragment : Fragment() {
                 for (booking in bookings) {
                     if (booking.status == "ACCEPTED" || booking.status == "REJECTED") {
                         val ride = getRideInfo(booking.rideId)
-                        val from = ride?.departureCity?.name ?: "Unknown"
-                        val to = ride?.destinationCity?.name ?: "Unknown"
+                        val from = ride?.from ?: "Unknown"
+                        val to = ride?.to ?: "Unknown"
                         
                         val (type, title, message) = when (booking.status) {
                             "ACCEPTED" -> Triple(
