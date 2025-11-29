@@ -24,7 +24,15 @@ class MainActivity : AppCompatActivity() {
             if (token.isNotEmpty()) {
                 RetrofitClient.setAuthToken(token)
             }
-            startActivity(Intent(this, DashboardActivity::class.java))
+            
+            // Redirect based on user role
+            val user = sessionManager.getUser()
+            val destination = if (user.role == "ADMIN") {
+                AdminDashboardActivity::class.java
+            } else {
+                DashboardActivity::class.java
+            }
+            startActivity(Intent(this, destination))
             finish()
             return
         }

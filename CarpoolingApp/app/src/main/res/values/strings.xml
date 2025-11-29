@@ -126,4 +126,32 @@
     <string name="no_notifications">No notifications yet</string>
     <string name="mark_all_read">Mark all as read</string>
     <string name="notification_icon">Notification icon</string>
+    
+    <!-- Admin Dashboard -->
+    <string name="admin_dashboard_title">🛡️ Admin Dashboard</string>
+    <string name="admin_rides_history">Rides History</string>
+    <string name="admin_manage_reports">Manage Reports</string>
+    <string name="admin_manage_users">Manage Users</string>
+    <string name="admin_all_rides">All Rides</string>
+    <string name="admin_total_rides">Total rides: 0</string>
+    <string name="admin_reports_title">Reports</string>
+    <string name="admin_pending_reports">Pending reports: 0</string>
+    <string name="admin_no_reports">No reports found</string>
+    <string name="admin_users_title">All Users</string>
+    <string name="admin_total_users">Total users: 0</string>
+    <string name="admin_no_users">No users found</string>
+    <string name="admin_ban_user">Ban User</string>
+    <string name="admin_unban_user">Unban User</string>
+    <string name="admin_dismiss">Dismiss</string>
+    <string name="admin_banned">BANNED</string>
+    <string name="admin_ban_confirm_title">Confirm Ban</string>
+    <string name="admin_ban_confirm_message">Are you sure you want to ban this user? They will no longer be able to use the app.</string>
+    <string name="admin_ban_user_confirm">Are you sure you want to ban %1$s?</string>
+    <string name="admin_unban_confirm_title">Confirm Unban</string>
+    <string name="admin_unban_user_confirm">Are you sure you want to unban %1$s?</string>
+    <string name="admin_user_banned">User has been banned</string>
+    <string name="admin_user_unbanned">User has been unbanned</string>
+    <string name="admin_ban_failed">Failed to ban user</string>
+    <string name="admin_unban_failed">Failed to unban user</string>
+    <string name="admin_report_dismissed">Report dismissed</string>
 </resources>
