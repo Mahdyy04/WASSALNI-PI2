@@ -78,20 +78,47 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Update notification badge using existing booking data (no separate notification service needed).
+     * 
+     * For DRIVERS: Count pending booking requests
+     * For PASSENGERS: Count bookings with ACCEPTED/REJECTED status (simplified: always show bell, no count)
+     */
     private fun updateNotificationBadge() {
         val user = sessionManager.getUser()
+        val isDriver = user.role == "DRIVER"
         
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.apiService.getUnreadNotificationCount(user.id)
-                if (response.isSuccessful) {
-                    val count = response.body()?.count ?: 0
-                    runOnUiThread {
-                        if (count > 0) {
-                            binding.tvNotificationBadge.visibility = View.VISIBLE
-                            binding.tvNotificationBadge.text = if (count > 9) "9+" else count.toString()
-                        } else {
-                            binding.tvNotificationBadge.visibility = View.GONE
+                if (isDriver) {
+                    // For drivers: count pending bookings as notifications
+                    val response = RetrofitClient.apiService.getPendingBookingsForDriver(user.id)
+                    if (response.isSuccessful) {
+                        val count = response.body()?.size ?: 0
+                        runOnUiThread {
+                            if (count > 0) {
+                                binding.tvNotificationBadge.visibility = View.VISIBLE
+                                binding.tvNotificationBadge.text = if (count > 9) "9+" else count.toString()
+                            } else {
+                                binding.tvNotificationBadge.visibility = View.GONE
+                            }
+                        }
+                    }
+                } else {
+                    // For passengers: check for ACCEPTED/REJECTED bookings
+                    val response = RetrofitClient.apiService.getPassengerBookings(user.id)
+                    if (response.isSuccessful) {
+                        val bookings = response.body() ?: emptyList()
+                        val notificationCount = bookings.count { 
+                            it.status == "ACCEPTED" || it.status == "REJECTED" 
+                        }
+                        runOnUiThread {
+                            if (notificationCount > 0) {
+                                binding.tvNotificationBadge.visibility = View.VISIBLE
+                                binding.tvNotificationBadge.text = if (notificationCount > 9) "9+" else notificationCount.toString()
+                            } else {
+                                binding.tvNotificationBadge.visibility = View.GONE
+                            }
                         }
                     }
                 }

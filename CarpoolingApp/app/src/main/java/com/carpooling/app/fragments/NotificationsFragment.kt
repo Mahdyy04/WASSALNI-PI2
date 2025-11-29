@@ -10,11 +10,23 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carpooling.app.adapters.NotificationAdapter
 import com.carpooling.app.databinding.FragmentNotificationsBinding
+import com.carpooling.app.models.Booking
 import com.carpooling.app.models.Notification
+import com.carpooling.app.models.Ride
 import com.carpooling.app.network.RetrofitClient
 import com.carpooling.app.utils.SessionManager
 import kotlinx.coroutines.launch
 
+/**
+ * NotificationsFragment - Simplified notification system using existing booking data.
+ * 
+ * No separate backend notification service needed!
+ * 
+ * For DRIVERS: Shows pending booking requests (from getPendingBookingsForDriver)
+ * For PASSENGERS: Shows recent booking status changes (ACCEPTED/REJECTED)
+ * 
+ * This uses client-side notification generation based on booking data.
+ */
 class NotificationsFragment : Fragment() {
     
     private var _binding: FragmentNotificationsBinding? = null
@@ -23,6 +35,9 @@ class NotificationsFragment : Fragment() {
     private lateinit var sessionManager: SessionManager
     private lateinit var notificationAdapter: NotificationAdapter
     private val notifications = mutableListOf<Notification>()
+    
+    // Cache for ride info to avoid repeated API calls
+    private val rideCache = mutableMapOf<String, Ride>()
     
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,14 +55,16 @@ class NotificationsFragment : Fragment() {
         
         setupRecyclerView()
         setupSwipeRefresh()
-        setupMarkAllReadButton()
+        
+        // Hide mark all read button - not needed for client-side notifications
+        binding.btnMarkAllRead.visibility = View.GONE
         
         loadNotifications()
     }
     
     private fun setupRecyclerView() {
-        notificationAdapter = NotificationAdapter(notifications) { notification ->
-            markAsRead(notification)
+        notificationAdapter = NotificationAdapter(notifications) { _ ->
+            // No-op: Client-side notifications don't need mark as read
         }
         
         binding.rvNotifications.apply {
@@ -62,95 +79,148 @@ class NotificationsFragment : Fragment() {
         }
     }
     
-    private fun setupMarkAllReadButton() {
-        binding.btnMarkAllRead.setOnClickListener {
-            markAllAsRead()
-        }
-    }
-    
     private fun loadNotifications() {
         val user = sessionManager.getUser()
+        val isDriver = user.role == "DRIVER"
         
         binding.progressBar.visibility = View.VISIBLE
         binding.tvEmpty.visibility = View.GONE
         
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.apiService.getNotifications(user.id)
+                notifications.clear()
                 
-                binding.progressBar.visibility = View.GONE
-                binding.swipeRefresh.isRefreshing = false
-                
-                if (response.isSuccessful) {
-                    val notificationList = response.body() ?: emptyList()
-                    notifications.clear()
-                    notifications.addAll(notificationList)
-                    notificationAdapter.notifyDataSetChanged()
-                    
-                    if (notifications.isEmpty()) {
-                        binding.tvEmpty.visibility = View.VISIBLE
-                        binding.rvNotifications.visibility = View.GONE
-                        binding.btnMarkAllRead.visibility = View.GONE
-                    } else {
-                        binding.tvEmpty.visibility = View.GONE
-                        binding.rvNotifications.visibility = View.VISIBLE
-                        // Show mark all read button only if there are unread notifications
-                        val hasUnread = notifications.any { !it.isRead }
-                        binding.btnMarkAllRead.visibility = if (hasUnread) View.VISIBLE else View.GONE
-                    }
+                if (isDriver) {
+                    // For drivers: Show pending booking requests
+                    loadDriverNotifications(user.id)
                 } else {
-                    Toast.makeText(requireContext(), "Failed to load notifications", Toast.LENGTH_SHORT).show()
+                    // For passengers: Show booking status changes
+                    loadPassengerNotifications(user.id)
                 }
+                
+                binding.progressBar.visibility = View.GONE
+                binding.swipeRefresh.isRefreshing = false
+                
+                notificationAdapter.notifyDataSetChanged()
+                
+                if (notifications.isEmpty()) {
+                    binding.tvEmpty.visibility = View.VISIBLE
+                    binding.rvNotifications.visibility = View.GONE
+                } else {
+                    binding.tvEmpty.visibility = View.GONE
+                    binding.rvNotifications.visibility = View.VISIBLE
+                }
+                
             } catch (e: Exception) {
                 binding.progressBar.visibility = View.GONE
                 binding.swipeRefresh.isRefreshing = false
-                Toast.makeText(requireContext(), "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Error loading notifications: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
     
-    private fun markAsRead(notification: Notification) {
-        if (notification.isRead) return
-        
-        lifecycleScope.launch {
-            try {
-                val response = RetrofitClient.apiService.markNotificationAsRead(notification.id)
-                if (response.isSuccessful) {
-                    // Update local state
-                    val index = notifications.indexOfFirst { it.id == notification.id }
-                    if (index != -1) {
-                        notifications[index] = notification.copy(isRead = true)
-                        notificationAdapter.notifyItemChanged(index)
+    /**
+     * Load notifications for drivers - pending booking requests
+     */
+    private suspend fun loadDriverNotifications(driverId: String) {
+        try {
+            val response = RetrofitClient.apiService.getPendingBookingsForDriver(driverId)
+            if (response.isSuccessful) {
+                val pendingBookings = response.body() ?: emptyList()
+                
+                for (booking in pendingBookings) {
+                    val ride = getRideInfo(booking.rideId)
+                    val from = ride?.departureCity?.name ?: "Unknown"
+                    val to = ride?.destinationCity?.name ?: "Unknown"
+                    
+                    notifications.add(
+                        Notification(
+                            id = booking.id,
+                            userId = driverId,
+                            type = "BOOKING_REQUEST",
+                            title = "New Booking Request",
+                            message = "A passenger wants to book ${booking.seatsBooked} seat(s) for your ride from $from to $to. Go to Pending Requests to accept or reject.",
+                            rideId = booking.rideId,
+                            bookingId = booking.id,
+                            isRead = false,
+                            createdAt = ""
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            // Log but don't fail
+            e.printStackTrace()
+        }
+    }
+    
+    /**
+     * Load notifications for passengers - booking status changes
+     */
+    private suspend fun loadPassengerNotifications(passengerId: String) {
+        try {
+            val response = RetrofitClient.apiService.getPassengerBookings(passengerId)
+            if (response.isSuccessful) {
+                val bookings = response.body() ?: emptyList()
+                
+                // Show ACCEPTED and REJECTED bookings as notifications
+                for (booking in bookings) {
+                    if (booking.status == "ACCEPTED" || booking.status == "REJECTED") {
+                        val ride = getRideInfo(booking.rideId)
+                        val from = ride?.departureCity?.name ?: "Unknown"
+                        val to = ride?.destinationCity?.name ?: "Unknown"
                         
-                        // Update mark all read button visibility
-                        val hasUnread = notifications.any { !it.isRead }
-                        binding.btnMarkAllRead.visibility = if (hasUnread) View.VISIBLE else View.GONE
+                        val (type, title, message) = when (booking.status) {
+                            "ACCEPTED" -> Triple(
+                                "BOOKING_ACCEPTED",
+                                "Booking Accepted! ✓",
+                                "Your booking for the ride from $from to $to has been accepted by the driver."
+                            )
+                            "REJECTED" -> Triple(
+                                "BOOKING_REJECTED",
+                                "Booking Rejected",
+                                "Your booking for the ride from $from to $to was rejected by the driver."
+                            )
+                            else -> continue
+                        }
+                        
+                        notifications.add(
+                            Notification(
+                                id = booking.id,
+                                userId = passengerId,
+                                type = type,
+                                title = title,
+                                message = message,
+                                rideId = booking.rideId,
+                                bookingId = booking.id,
+                                isRead = true, // Already processed bookings are shown as "read"
+                                createdAt = ""
+                            )
+                        )
                     }
                 }
-            } catch (e: Exception) {
-                // Silently fail - not critical
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
     
-    private fun markAllAsRead() {
-        val user = sessionManager.getUser()
+    /**
+     * Get ride info with caching to avoid repeated API calls
+     */
+    private suspend fun getRideInfo(rideId: String): Ride? {
+        // Check cache first
+        rideCache[rideId]?.let { return it }
         
-        lifecycleScope.launch {
-            try {
-                val response = RetrofitClient.apiService.markAllNotificationsAsRead(user.id)
-                if (response.isSuccessful) {
-                    // Update all local notifications to read
-                    for (i in notifications.indices) {
-                        notifications[i] = notifications[i].copy(isRead = true)
-                    }
-                    notificationAdapter.notifyDataSetChanged()
-                    binding.btnMarkAllRead.visibility = View.GONE
-                    Toast.makeText(requireContext(), "All notifications marked as read", Toast.LENGTH_SHORT).show()
+        return try {
+            val response = RetrofitClient.apiService.getRideById(rideId)
+            if (response.isSuccessful) {
+                response.body()?.also { ride ->
+                    rideCache[rideId] = ride
                 }
-            } catch (e: Exception) {
-                Toast.makeText(requireContext(), "Failed to mark all as read", Toast.LENGTH_SHORT).show()
-            }
+            } else null
+        } catch (e: Exception) {
+            null
         }
     }
     

@@ -9,8 +9,6 @@ import com.carpooling.app.models.CreateReportRequest
 import com.carpooling.app.models.CreateReviewRequest
 import com.carpooling.app.models.CreateRideRequest
 import com.carpooling.app.models.LoginRequest
-import com.carpooling.app.models.Notification
-import com.carpooling.app.models.NotificationCountResponse
 import com.carpooling.app.models.Report
 import com.carpooling.app.models.Review
 import com.carpooling.app.models.Ride
@@ -32,6 +30,8 @@ import retrofit2.http.*
  * - booking-service (port 8082): /booking-service/api/bookings/*
  * - review-service (port 8086): /review-service/api/reviews/*
  * - report-service (port 8087): /report-service/api/reports/*
+ * 
+ * Note: Notifications are generated client-side from booking data (no separate service needed)
  */
 interface ApiService {
     
@@ -169,20 +169,8 @@ interface ApiService {
     ): Response<Report>
     
     // ==================== Notifications ====================
-    // Service: notification-service (8088)
-    
-    @GET("notification-service/api/notifications/user/{userId}")
-    suspend fun getNotifications(@Path("userId") userId: String): Response<List<Notification>>
-    
-    @GET("notification-service/api/notifications/user/{userId}/unread")
-    suspend fun getUnreadNotifications(@Path("userId") userId: String): Response<List<Notification>>
-    
-    @GET("notification-service/api/notifications/user/{userId}/count")
-    suspend fun getUnreadNotificationCount(@Path("userId") userId: String): Response<NotificationCountResponse>
-    
-    @PUT("notification-service/api/notifications/{notificationId}/read")
-    suspend fun markNotificationAsRead(@Path("notificationId") notificationId: String): Response<Unit>
-    
-    @PUT("notification-service/api/notifications/user/{userId}/read-all")
-    suspend fun markAllNotificationsAsRead(@Path("userId") userId: String): Response<Unit>
+    // NOTE: Notifications are generated client-side from booking data.
+    // No separate notification service is required.
+    // - Drivers see pending bookings as notifications
+    // - Passengers see ACCEPTED/REJECTED bookings as notifications
 }
