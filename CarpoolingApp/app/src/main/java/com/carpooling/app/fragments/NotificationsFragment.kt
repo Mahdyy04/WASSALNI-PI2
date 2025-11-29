@@ -120,9 +120,10 @@ class NotificationsFragment : Fragment() {
     }
     
     /**
-     * Load notifications for drivers - pending booking requests
+     * Load notifications for drivers - pending booking requests and new reviews
      */
     private suspend fun loadDriverNotifications(driverId: String) {
+        // Load pending booking requests
         try {
             val response = RetrofitClient.apiService.getPendingBookingsForDriver(driverId)
             if (response.isSuccessful) {
@@ -150,6 +151,43 @@ class NotificationsFragment : Fragment() {
             }
         } catch (e: Exception) {
             // Log but don't fail
+            e.printStackTrace()
+        }
+        
+        // Load reviews received by this driver
+        try {
+            val reviewResponse = RetrofitClient.apiService.getReviewsByUser(driverId)
+            if (reviewResponse.isSuccessful) {
+                val reviews = reviewResponse.body() ?: emptyList()
+                
+                for (review in reviews) {
+                    val ride = getRideInfo(review.rideId)
+                    val from = ride?.departureCity?.name ?: "Unknown"
+                    val to = ride?.destinationCity?.name ?: "Unknown"
+                    
+                    val stars = "⭐".repeat(review.rating)
+                    val message = if (review.comment.isNotEmpty()) {
+                        "You received a $stars rating for your ride from $from to $to. Comment: \"${review.comment}\""
+                    } else {
+                        "You received a $stars rating for your ride from $from to $to."
+                    }
+                    
+                    notifications.add(
+                        Notification(
+                            id = review.id,
+                            userId = driverId,
+                            type = "REVIEW_RECEIVED",
+                            title = "New Review Received ⭐",
+                            message = message,
+                            rideId = review.rideId,
+                            bookingId = "",
+                            isRead = true, // Reviews are shown as "read" since they're historical
+                            createdAt = ""
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
             e.printStackTrace()
         }
     }

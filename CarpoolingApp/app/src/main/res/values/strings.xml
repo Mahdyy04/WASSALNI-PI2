@@ -68,10 +68,18 @@
     <string name="reviews">Reviews</string>
     <string name="write_review">Write Review</string>
     <string name="rating_hint">Rating (1-5)</string>
-    <string name="comment_hint">Comment</string>
+    <string name="comment_hint">Comment (optional)</string>
     <string name="submit_review">Submit Review</string>
     <string name="no_reviews">No reviews yet</string>
     <string name="average_rating">Average Rating: %.1f</string>
+    <string name="my_last_rides">My Last Rides</string>
+    <string name="my_last_rides_description">Your confirmed rides - rate your drivers!</string>
+    <string name="no_confirmed_rides">No confirmed rides yet</string>
+    <string name="rate_your_driver">Rate your driver</string>
+    <string name="rate_driver_title">Rate Your Driver</string>
+    <string name="your_rating">Your Rating</string>
+    <string name="already_reviewed">✓ You have already reviewed this ride</string>
+    <string name="review_received">New Review Received</string>
     
     <!-- Reports -->
     <string name="report_user">Report User</string>
