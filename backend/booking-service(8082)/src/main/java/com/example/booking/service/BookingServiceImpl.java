@@ -73,6 +73,7 @@ public class BookingServiceImpl implements BookingService {
         // Update available seats in ride service
         try {
             System.out.println("Updating ride seats: rideId=" + booking.getRideId() + ", seatsToDeduct=" + seatsToDeduct);
+            
             webClientBuilder.build()
                     .put()
                     .uri("http://ride-service/api/rides/{rideId}/seats?seatsToDeduct={seats}",

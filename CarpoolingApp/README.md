@@ -14,9 +14,10 @@ A native Android application built with Kotlin for the carpooling system, follow
   - Search for available rides by city and date
   - Filter rides by driver gender (UI ready)
   - View ride details (price, seats, route info)
-  - Book rides instantly
+  - Book rides instantly with seat selection
   - View and manage bookings with pull-to-refresh
   - Cancel pending bookings
+  - View booking status notifications
   
 - 🚗 **Driver Features**
   - Publish new rides with departure/destination cities
@@ -24,6 +25,13 @@ A native Android application built with Kotlin for the carpooling system, follow
   - View published rides
   - Accept/Reject booking requests from passengers
   - Delete rides
+  - View pending booking notifications
+
+- 🔔 **Notification System** (Client-side - No separate backend service needed)
+  - Notification bell icon with unread badge
+  - Drivers see pending booking requests as notifications
+  - Passengers see booking acceptance/rejection notifications
+  - Uses existing booking data - no additional backend required!
 
 - ⭐ **Review System** (API ready)
   - Rate drivers and passengers after rides
@@ -70,6 +78,8 @@ The Gateway uses Eureka discovery with the pattern `/{service-name}/api/{endpoin
 | Reports | report-service | 8087 | `/report-service/api/reports/*` |
 | Eureka | eureka-server | 8083 | Service discovery |
 
+**Note**: Notifications are generated client-side from booking data. No separate notification service is required!
+
 ### Example API Calls
 
 ```
@@ -100,7 +110,8 @@ CarpoolingApp/
 │   │       │   │   ├── RideAdapter.kt
 │   │       │   │   ├── BookingAdapter.kt
 │   │       │   │   ├── DriverRideAdapter.kt
-│   │       │   │   └── PendingBookingAdapter.kt
+│   │       │   │   ├── PendingBookingAdapter.kt
+│   │       │   │   └── NotificationAdapter.kt
 │   │       │   ├── api/               # API service interfaces
 │   │       │   │   └── ApiService.kt
 │   │       │   ├── fragments/         # UI fragments
@@ -108,7 +119,8 @@ CarpoolingApp/
 │   │       │   │   ├── MyBookingsFragment.kt
 │   │       │   │   ├── MyRidesFragment.kt
 │   │       │   │   ├── PublishRideFragment.kt
-│   │       │   │   └── PendingBookingsFragment.kt
+│   │       │   │   ├── PendingBookingsFragment.kt
+│   │       │   │   └── NotificationsFragment.kt
 │   │       │   ├── models/            # Data models
 │   │       │   │   ├── User.kt
 │   │       │   │   ├── Ride.kt
@@ -299,6 +311,30 @@ Response: Report object
 GET /report-service/api/reports/status/{status}
 ```
 
+## Notification System (Simplified)
+
+The notification system works **entirely client-side** without a separate backend service:
+
+### How It Works
+
+- **For Drivers**: 
+  - The app fetches pending bookings via `GET /booking-service/api/bookings/driver/{driverId}/pending`
+  - Each pending booking is displayed as a notification
+  - Badge shows count of pending bookings
+
+- **For Passengers**: 
+  - The app fetches all bookings via `GET /booking-service/api/bookings/passenger/{passengerId}`
+  - Bookings with status ACCEPTED or REJECTED are displayed as notifications
+  - Badge shows count of processed bookings
+
+### Benefits of Client-Side Notifications
+
+✅ No additional backend service to deploy/maintain  
+✅ Uses existing booking endpoints  
+✅ Real-time data on every refresh  
+✅ Works offline (shows cached data)  
+✅ Simpler architecture  
+
 ## Role-Based Features
 
 ### Passenger Dashboard (2 tabs)
@@ -309,6 +345,11 @@ GET /report-service/api/reports/status/{status}
 - **My Rides**: View and delete published rides
 - **Pending Requests**: Accept/reject booking requests
 - **Publish Ride**: Create new rides with identity verification
+
+### Notification Bell (Both Roles)
+- Click the bell icon to view all notifications
+- Badge shows unread count
+- Pull-to-refresh to update
 
 ## Troubleshooting
 
@@ -350,6 +391,11 @@ GET /report-service/api/reports/status/{status}
 - [x] Pull-to-refresh for bookings
 - [x] Driver identity verification fields
 - [x] Hide rides with no available seats
+- [x] **Client-Side Notifications**
+  - Notification bell icon with unread badge in dashboard
+  - Driver sees pending booking requests as notifications
+  - Passenger sees booking status changes as notifications
+  - No separate backend service required!
 
 ## API Ready (Models implemented)
 
@@ -362,11 +408,11 @@ GET /report-service/api/reports/status/{status}
 
 - [ ] Implement reviews UI
 - [ ] Implement reports UI
-- [ ] Add real-time notifications
 - [ ] Add maps integration for route visualization
 - [ ] Add photo upload for user profiles
 - [ ] Implement chat between drivers and passengers
 - [ ] Add payment integration
+- [ ] Push notifications (Firebase Cloud Messaging)
 
 ## License
 
