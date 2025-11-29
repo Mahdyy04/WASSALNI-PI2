@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.carpooling.app.R
 import com.carpooling.app.adapters.NotificationAdapter
 import com.carpooling.app.databinding.FragmentNotificationsBinding
 import com.carpooling.app.models.Booking
@@ -203,8 +204,8 @@ class NotificationsFragment : Fragment() {
                             id = report.id,
                             userId = driverId,
                             type = "REPORT_RECEIVED",
-                            title = "⚠️ Warning: You have been reported",
-                            message = "An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.",
+                            title = context?.getString(R.string.report_warning_title) ?: "⚠️ Warning: You have been reported",
+                            message = context?.getString(R.string.report_warning_message) ?: "An anonymous passenger has reported you. Please ensure you follow community guidelines to avoid further actions.",
                             rideId = report.rideId,
                             bookingId = "",
                             isRead = false, // Reports are shown as unread to get driver's attention

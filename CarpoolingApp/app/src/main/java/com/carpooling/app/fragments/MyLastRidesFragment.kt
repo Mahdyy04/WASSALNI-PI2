@@ -33,7 +33,10 @@ class MyLastRidesFragment : Fragment() {
         /** Number of characters to display when showing truncated ride ID */
         private const val RIDE_ID_DISPLAY_LENGTH = 8
         
-        /** Report reason options matching backend ReportReason enum */
+        /**
+         * Report reason options matching backend ReportReason enum values.
+         * These values must match the backend exactly: INAPPROPRIATE_BEHAVIOR, NO_SHOW, UNSAFE_DRIVING, OTHER
+         */
         private val REPORT_REASONS = arrayOf(
             "INAPPROPRIATE_BEHAVIOR",
             "NO_SHOW",
@@ -297,10 +300,10 @@ class MyLastRidesFragment : Fragment() {
                 if (response.isSuccessful) {
                     Toast.makeText(context, getString(R.string.report_submitted), Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Failed to submit report: ${response.message()}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, getString(R.string.error_submit_report), Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, getString(R.string.error_network), Toast.LENGTH_SHORT).show()
             }
         }
     }
