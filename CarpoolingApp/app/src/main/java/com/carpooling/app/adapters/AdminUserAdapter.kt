@@ -46,14 +46,12 @@ class AdminUserAdapter(
             // Toggle ban button
             if (user.isBanned) {
                 binding.btnToggleBan.text = itemView.context.getString(R.string.admin_unban_user)
-                binding.btnToggleBan.setBackgroundColor(
-                    ContextCompat.getColor(itemView.context, R.color.status_success)
-                )
+                binding.btnToggleBan.backgroundTintList = 
+                    ContextCompat.getColorStateList(itemView.context, R.color.status_success)
             } else {
                 binding.btnToggleBan.text = itemView.context.getString(R.string.admin_ban_user)
-                binding.btnToggleBan.setBackgroundColor(
-                    ContextCompat.getColor(itemView.context, R.color.status_danger)
-                )
+                binding.btnToggleBan.backgroundTintList = 
+                    ContextCompat.getColorStateList(itemView.context, R.color.status_danger)
             }
             
             binding.btnToggleBan.setOnClickListener {
