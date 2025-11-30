@@ -50,6 +50,7 @@ class NotificationAdapter(
                 "BOOKING_REQUEST" -> R.drawable.ic_notification_request
                 "BOOKING_ACCEPTED" -> R.drawable.ic_notification_accepted
                 "BOOKING_REJECTED" -> R.drawable.ic_notification_rejected
+                "BOOKING_CANCELLED" -> R.drawable.ic_notification_cancelled
                 "REVIEW_RECEIVED" -> R.drawable.ic_notification_review
                 "REPORT_RECEIVED" -> R.drawable.ic_notification_report
                 else -> R.drawable.ic_notification_default

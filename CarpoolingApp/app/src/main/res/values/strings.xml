@@ -126,6 +126,8 @@
     <string name="no_notifications">No notifications yet</string>
     <string name="mark_all_read">Mark all as read</string>
     <string name="notification_icon">Notification icon</string>
+    <string name="booking_cancelled_title">Booking Cancelled</string>
+    <string name="booking_cancelled_message">A passenger has cancelled their booking for %1$d seat(s) on your ride from %2$s to %3$s.</string>
     
     <!-- Admin Dashboard -->
     <string name="admin_dashboard_title">🛡️ Admin Dashboard</string>

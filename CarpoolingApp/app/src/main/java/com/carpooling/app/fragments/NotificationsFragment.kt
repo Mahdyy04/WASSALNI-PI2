@@ -217,6 +217,51 @@ class NotificationsFragment : Fragment() {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        
+        // Load cancelled bookings for driver's rides
+        try {
+            val ridesResponse = RetrofitClient.apiService.getDriverRides(driverId)
+            if (ridesResponse.isSuccessful) {
+                val rides = ridesResponse.body() ?: emptyList()
+                
+                for (ride in rides) {
+                    try {
+                        val bookingsResponse = RetrofitClient.apiService.getRideBookings(ride.id)
+                        if (bookingsResponse.isSuccessful) {
+                            val bookings = bookingsResponse.body() ?: emptyList()
+                            
+                            // Filter for cancelled bookings
+                            val cancelledBookings = bookings.filter { it.status == "CANCELLED" }
+                            
+                            for (booking in cancelledBookings) {
+                                notifications.add(
+                                    Notification(
+                                        id = booking.id,
+                                        userId = driverId,
+                                        type = "BOOKING_CANCELLED",
+                                        title = getString(R.string.booking_cancelled_title),
+                                        message = getString(
+                                            R.string.booking_cancelled_message,
+                                            booking.seatsBooked,
+                                            ride.from,
+                                            ride.to
+                                        ),
+                                        rideId = ride.id,
+                                        bookingId = booking.id,
+                                        isRead = true, // Cancelled bookings are shown as "read" since they're historical
+                                        createdAt = ""
+                                    )
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     /**
