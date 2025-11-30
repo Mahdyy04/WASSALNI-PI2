@@ -41,7 +41,14 @@ class LastRideAdapter(
             if (ride != null) {
                 binding.tvRoute.text = "${ride.from} → ${ride.to}"
                 binding.tvDate.text = "Date: ${ride.date}"
-                binding.tvPrice.text = priceFormat.format(ride.price * booking.seatsBooked)
+                // Show total price for the passenger's booking
+                val totalPrice = ride.price * booking.seatsBooked
+                if (booking.seatsBooked > 1) {
+                    // Show breakdown when multiple seats are booked
+                    binding.tvPrice.text = "Total: ${priceFormat.format(totalPrice)} (${booking.seatsBooked} × ${priceFormat.format(ride.price)})"
+                } else {
+                    binding.tvPrice.text = priceFormat.format(totalPrice)
+                }
                 binding.tvPrice.visibility = View.VISIBLE
             } else {
                 binding.tvRoute.text = "Ride #${booking.rideId.take(RIDE_ID_DISPLAY_LENGTH)}"
