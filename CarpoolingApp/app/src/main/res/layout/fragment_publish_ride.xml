@@ -65,7 +65,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/postal_code_hint"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     app:boxBackgroundMode="outline"
                     app:boxCornerRadiusTopStart="8dp"
                     app:boxCornerRadiusTopEnd="8dp"
@@ -78,6 +78,17 @@
                         android:layout_height="wrap_content"
                         android:inputType="number" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Departure Location Picker Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPickDeparture"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_on_map"
+                    android:layout_marginBottom="16dp"
+                    app:icon="@android:drawable/ic_menu_mylocation"
+                    app:iconGravity="textStart" />
 
                 <!-- Destination City Section -->
                 <TextView
@@ -110,7 +121,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:hint="@string/postal_code_hint"
-                    android:layout_marginBottom="16dp"
+                    android:layout_marginBottom="8dp"
                     app:boxBackgroundMode="outline"
                     app:boxCornerRadiusTopStart="8dp"
                     app:boxCornerRadiusTopEnd="8dp"
@@ -123,6 +134,17 @@
                         android:layout_height="wrap_content"
                         android:inputType="number" />
                 </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Destination Location Picker Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnPickDestination"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/select_on_map"
+                    android:layout_marginBottom="16dp"
+                    app:icon="@android:drawable/ic_menu_mylocation"
+                    app:iconGravity="textStart" />
 
                 <!-- Ride Details Section -->
                 <TextView

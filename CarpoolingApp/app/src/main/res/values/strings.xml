@@ -156,4 +156,21 @@
     <string name="admin_ban_failed">Failed to ban user</string>
     <string name="admin_unban_failed">Failed to unban user</string>
     <string name="admin_report_dismissed">Report dismissed</string>
+    
+    <!-- Location Picker -->
+    <string name="select_on_map">Select on Map</string>
+    <string name="location_selected">Location selected</string>
+    <string name="select_departure_location">Select Departure Location</string>
+    <string name="select_destination_location">Select Destination</string>
+    <string name="selected_location">Selected Location</string>
+    <string name="move_map_to_select">Move the map to select a location</string>
+    <string name="my_location">My Location</string>
+    <string name="confirm">Confirm</string>
+    <string name="location_permission_denied">Location permission denied. You can still select a location manually.</string>
+    <string name="could_not_get_location">Could not get current location</string>
+    <string name="please_select_location">Please select a location on the map</string>
+    <string name="address_not_found">Address not found</string>
+    <string name="error_getting_address">Error getting address</string>
+    <string name="departure_location_selected">Departure location selected</string>
+    <string name="destination_location_selected">Destination location selected</string>
 </resources>

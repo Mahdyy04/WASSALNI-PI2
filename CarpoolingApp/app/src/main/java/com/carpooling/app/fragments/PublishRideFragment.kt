@@ -1,13 +1,17 @@
 package com.carpooling.app.fragments
 
+import android.app.Activity
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.carpooling.app.LocationPickerActivity
 import com.carpooling.app.R
 import com.carpooling.app.databinding.FragmentPublishRideBinding
 import com.carpooling.app.models.City
@@ -25,6 +29,58 @@ class PublishRideFragment : Fragment() {
     private lateinit var sessionManager: SessionManager
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     
+    // Geolocation data
+    private var departureLatitude: Double? = null
+    private var departureLongitude: Double? = null
+    private var destinationLatitude: Double? = null
+    private var destinationLongitude: Double? = null
+    
+    // Activity result launcher for departure location
+    private val departureLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                departureLatitude = data.getDoubleExtra(LocationPickerActivity.RESULT_LATITUDE, 0.0)
+                departureLongitude = data.getDoubleExtra(LocationPickerActivity.RESULT_LONGITUDE, 0.0)
+                val cityName = data.getStringExtra(LocationPickerActivity.RESULT_CITY_NAME) ?: ""
+                val postalCode = data.getStringExtra(LocationPickerActivity.RESULT_POSTAL_CODE) ?: ""
+                
+                binding.etDepartureCity.setText(cityName)
+                binding.etDeparturePostal.setText(postalCode)
+                
+                // Update button to show location selected
+                binding.btnPickDeparture.text = getString(R.string.location_selected)
+                binding.btnPickDeparture.setIconResource(android.R.drawable.ic_menu_myplaces)
+                
+                Toast.makeText(context, getString(R.string.departure_location_selected), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
+    // Activity result launcher for destination location
+    private val destinationLocationLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.let { data ->
+                destinationLatitude = data.getDoubleExtra(LocationPickerActivity.RESULT_LATITUDE, 0.0)
+                destinationLongitude = data.getDoubleExtra(LocationPickerActivity.RESULT_LONGITUDE, 0.0)
+                val cityName = data.getStringExtra(LocationPickerActivity.RESULT_CITY_NAME) ?: ""
+                val postalCode = data.getStringExtra(LocationPickerActivity.RESULT_POSTAL_CODE) ?: ""
+                
+                binding.etDestinationCity.setText(cityName)
+                binding.etDestinationPostal.setText(postalCode)
+                
+                // Update button to show location selected
+                binding.btnPickDestination.text = getString(R.string.location_selected)
+                binding.btnPickDestination.setIconResource(android.R.drawable.ic_menu_myplaces)
+                
+                Toast.makeText(context, getString(R.string.destination_location_selected), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -40,11 +96,26 @@ class PublishRideFragment : Fragment() {
         sessionManager = SessionManager(requireContext())
         
         setupDatePicker()
+        setupLocationPickers()
         
         binding.btnPublish.setOnClickListener {
             if (validateInput()) {
                 publishRide()
             }
+        }
+    }
+    
+    private fun setupLocationPickers() {
+        binding.btnPickDeparture.setOnClickListener {
+            val intent = Intent(requireContext(), LocationPickerActivity::class.java)
+            intent.putExtra(LocationPickerActivity.EXTRA_LOCATION_TYPE, "departure")
+            departureLocationLauncher.launch(intent)
+        }
+        
+        binding.btnPickDestination.setOnClickListener {
+            val intent = Intent(requireContext(), LocationPickerActivity::class.java)
+            intent.putExtra(LocationPickerActivity.EXTRA_LOCATION_TYPE, "destination")
+            destinationLocationLauncher.launch(intent)
         }
     }
     
@@ -118,11 +189,15 @@ class PublishRideFragment : Fragment() {
         
         val departureCity = City(
             name = binding.etDepartureCity.text.toString().trim(),
-            postalCode = binding.etDeparturePostal.text.toString().trim()
+            postalCode = binding.etDeparturePostal.text.toString().trim(),
+            latitude = departureLatitude,
+            longitude = departureLongitude
         )
         val destinationCity = City(
             name = binding.etDestinationCity.text.toString().trim(),
-            postalCode = binding.etDestinationPostal.text.toString().trim()
+            postalCode = binding.etDestinationPostal.text.toString().trim(),
+            latitude = destinationLatitude,
+            longitude = destinationLongitude
         )
         
         val request = CreateRideRequest(
@@ -159,6 +234,18 @@ class PublishRideFragment : Fragment() {
         binding.etDate.setText("")
         binding.etSeats.setText("")
         binding.etPrice.setText("")
+        
+        // Reset geolocation data
+        departureLatitude = null
+        departureLongitude = null
+        destinationLatitude = null
+        destinationLongitude = null
+        
+        // Reset button text and icons
+        binding.btnPickDeparture.text = getString(R.string.select_on_map)
+        binding.btnPickDeparture.setIconResource(android.R.drawable.ic_menu_mylocation)
+        binding.btnPickDestination.text = getString(R.string.select_on_map)
+        binding.btnPickDestination.setIconResource(android.R.drawable.ic_menu_mylocation)
     }
     
     override fun onDestroyView() {
