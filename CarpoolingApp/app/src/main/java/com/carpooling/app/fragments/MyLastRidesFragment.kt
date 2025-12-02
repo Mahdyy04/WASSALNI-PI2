@@ -12,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.carpooling.app.R
 import com.carpooling.app.adapters.LastRideAdapter
+import com.carpooling.app.api.ModerationRequest
 import com.carpooling.app.databinding.DialogReportBinding
 import com.carpooling.app.databinding.DialogReviewBinding
 import com.carpooling.app.databinding.FragmentMyLastRidesBinding
@@ -281,18 +282,47 @@ class MyLastRidesFragment : Fragment() {
         
         dialog.show()
     }
-    
+
     private fun submitReport(booking: Booking, reason: String, description: String) {
         val passengerId = sessionManager.getUserId()
         val driverId = booking.ride?.driverId
-        
+
         if (driverId == null) {
             Toast.makeText(context, getString(R.string.error_driver_info_unavailable), Toast.LENGTH_SHORT).show()
             return
         }
-        
+
         lifecycleScope.launch {
+
             try {
+                // 1️⃣ --- APPEL MODÉRATION ---
+                val moderationResponse = RetrofitClient.moderationApi.check(
+                    ModerationRequest(text = description)
+                )
+
+                if (!moderationResponse.isSuccessful || moderationResponse.body() == null) {
+                    Toast.makeText(context, "Moderation service unavailable", Toast.LENGTH_SHORT).show()
+                    return@launch
+                }
+
+                val moderation = moderationResponse.body()!!
+
+                // 2️⃣ --- SI TEXTE VULGAIRE : ON BLOQUE ---
+                if (!moderation.allowed) {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("⚠️ Texte non autorisé")
+                        .setMessage(
+                            "Votre description contient du contenu offensant.\n" +
+                                    "Raison : ${moderation.reason}\n\n" +
+                                    "Veuillez modifier le texte."
+                        )
+                        .setPositiveButton("OK", null)
+                        .show()
+
+                    return@launch
+                }
+
+                // 3️⃣ --- SI TEXTE CLEAN : ON ENVOIE LE REPORT ---
                 val request = CreateReportRequest(
                     reporterId = passengerId,
                     reportedUserId = driverId,
@@ -300,19 +330,21 @@ class MyLastRidesFragment : Fragment() {
                     reason = reason,
                     description = description
                 )
-                
+
                 val response = RetrofitClient.apiService.createReport(request)
+
                 if (response.isSuccessful) {
                     Toast.makeText(context, getString(R.string.report_submitted), Toast.LENGTH_SHORT).show()
                 } else {
                     Toast.makeText(context, getString(R.string.error_submit_report), Toast.LENGTH_SHORT).show()
                 }
+
             } catch (e: Exception) {
-                Toast.makeText(context, getString(R.string.error_network), Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
-    
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

@@ -1,0 +1,6 @@
+com\example\moderation\ModerationServiceApplication.class
+com\example\moderation\service\ContentFilterService.class
+com\example\moderation\service\ContentFilterService$ModerationDecision.class
+com\example\moderation\dto\ModerationResult.class
+com\example\moderation\dto\ModerationRequest.class
+com\example\moderation\controller\ModerationController.class
