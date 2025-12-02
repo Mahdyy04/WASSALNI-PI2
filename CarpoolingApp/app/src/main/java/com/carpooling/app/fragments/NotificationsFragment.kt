@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.carpooling.app.R
 import com.carpooling.app.adapters.NotificationAdapter
 import com.carpooling.app.databinding.FragmentNotificationsBinding
 import com.carpooling.app.models.Booking
@@ -120,9 +121,10 @@ class NotificationsFragment : Fragment() {
     }
     
     /**
-     * Load notifications for drivers - pending booking requests
+     * Load notifications for drivers - pending booking requests and new reviews
      */
     private suspend fun loadDriverNotifications(driverId: String) {
+        // Load pending booking requests
         try {
             val response = RetrofitClient.apiService.getPendingBookingsForDriver(driverId)
             if (response.isSuccessful) {
@@ -130,8 +132,8 @@ class NotificationsFragment : Fragment() {
                 
                 for (booking in pendingBookings) {
                     val ride = getRideInfo(booking.rideId)
-                    val from = ride?.departureCity?.name ?: "Unknown"
-                    val to = ride?.destinationCity?.name ?: "Unknown"
+                    val from = ride?.from ?: "Unknown"
+                    val to = ride?.to ?: "Unknown"
                     
                     notifications.add(
                         Notification(
@@ -152,6 +154,114 @@ class NotificationsFragment : Fragment() {
             // Log but don't fail
             e.printStackTrace()
         }
+        
+        // Load reviews received by this driver
+        try {
+            val reviewResponse = RetrofitClient.apiService.getReviewsByUser(driverId)
+            if (reviewResponse.isSuccessful) {
+                val reviews = reviewResponse.body() ?: emptyList()
+                
+                for (review in reviews) {
+                    val ride = getRideInfo(review.rideId)
+                    val from = ride?.from ?: "Unknown"
+                    val to = ride?.to ?: "Unknown"
+                    
+                    val stars = "⭐".repeat(review.rating)
+                    val message = if (review.comment.isNotEmpty()) {
+                        "You received a $stars rating for your ride from $from to $to. Comment: \"${review.comment}\""
+                    } else {
+                        "You received a $stars rating for your ride from $from to $to."
+                    }
+                    
+                    notifications.add(
+                        Notification(
+                            id = review.id,
+                            userId = driverId,
+                            type = "REVIEW_RECEIVED",
+                            title = "New Review Received ⭐",
+                            message = message,
+                            rideId = review.rideId,
+                            bookingId = "",
+                            isRead = true, // Reviews are shown as "read" since they're historical
+                            createdAt = ""
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        
+        // Load reports received by this driver
+        try {
+            val reportResponse = RetrofitClient.apiService.getReportsByReportedUser(driverId)
+            if (reportResponse.isSuccessful) {
+                val reports = reportResponse.body() ?: emptyList()
+                
+                for (report in reports) {
+                    notifications.add(
+                        Notification(
+                            id = report.id,
+                            userId = driverId,
+                            type = "REPORT_RECEIVED",
+                            title = getString(R.string.report_warning_title),
+                            message = getString(R.string.report_warning_message),
+                            rideId = report.rideId,
+                            bookingId = "",
+                            isRead = false, // Reports are shown as unread to get driver's attention
+                            createdAt = ""
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        
+        // Load cancelled bookings for driver's rides
+        try {
+            val ridesResponse = RetrofitClient.apiService.getDriverRides(driverId)
+            if (ridesResponse.isSuccessful) {
+                val rides = ridesResponse.body() ?: emptyList()
+                
+                for (ride in rides) {
+                    try {
+                        val bookingsResponse = RetrofitClient.apiService.getRideBookings(ride.id)
+                        if (bookingsResponse.isSuccessful) {
+                            val bookings = bookingsResponse.body() ?: emptyList()
+                            
+                            // Filter for cancelled bookings
+                            val cancelledBookings = bookings.filter { it.status == "CANCELLED" }
+                            
+                            for (booking in cancelledBookings) {
+                                notifications.add(
+                                    Notification(
+                                        id = booking.id,
+                                        userId = driverId,
+                                        type = "BOOKING_CANCELLED",
+                                        title = getString(R.string.booking_cancelled_title),
+                                        message = getString(
+                                            R.string.booking_cancelled_message,
+                                            booking.seatsBooked,
+                                            ride.from,
+                                            ride.to
+                                        ),
+                                        rideId = ride.id,
+                                        bookingId = booking.id,
+                                        isRead = true, // Cancelled bookings are shown as "read" since they're historical
+                                        createdAt = ""
+                                    )
+                                )
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     /**
@@ -167,8 +277,8 @@ class NotificationsFragment : Fragment() {
                 for (booking in bookings) {
                     if (booking.status == "ACCEPTED" || booking.status == "REJECTED") {
                         val ride = getRideInfo(booking.rideId)
-                        val from = ride?.departureCity?.name ?: "Unknown"
-                        val to = ride?.destinationCity?.name ?: "Unknown"
+                        val from = ride?.from ?: "Unknown"
+                        val to = ride?.to ?: "Unknown"
                         
                         val (type, title, message) = when (booking.status) {
                             "ACCEPTED" -> Triple(

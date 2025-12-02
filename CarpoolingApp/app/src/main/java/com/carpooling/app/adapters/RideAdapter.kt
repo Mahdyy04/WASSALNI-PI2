@@ -23,7 +23,7 @@ class RideAdapter(
             binding.tvDriver.text = "Driver ID: ${ride.driverId.take(8)}..."
             binding.tvDate.text = "Date: ${ride.date}"
             binding.tvSeats.text = "Seats: ${ride.availableSeats} available"
-            binding.tvPrice.text = priceFormat.format(ride.price)
+            binding.tvPrice.text = "${priceFormat.format(ride.price)}/seat"
             
             // Disable booking if no seats available
             binding.btnBook.isEnabled = ride.availableSeats > 0

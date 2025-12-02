@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.carpooling.app.databinding.ActivityDashboardBinding
 import com.carpooling.app.fragments.MyBookingsFragment
+import com.carpooling.app.fragments.MyLastRidesFragment
 import com.carpooling.app.fragments.MyRidesFragment
 import com.carpooling.app.fragments.NotificationsFragment
 import com.carpooling.app.fragments.PendingBookingsFragment
@@ -137,9 +138,10 @@ class DashboardActivity : AppCompatActivity() {
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.pending_requests))
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.publish_ride))
         } else {
-            // Passenger tabs: Search Rides, My Bookings
+            // Passenger tabs: Search Rides, My Bookings, My Last Rides
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.search_rides))
             binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_bookings))
+            binding.tabLayout.addTab(binding.tabLayout.newTab().setText(R.string.my_last_rides))
         }
         
         setupTabListener()
@@ -159,6 +161,7 @@ class DashboardActivity : AppCompatActivity() {
                     when (tab?.position) {
                         0 -> loadFragment(SearchRidesFragment())
                         1 -> loadFragment(MyBookingsFragment())
+                        2 -> loadFragment(MyLastRidesFragment())
                     }
                 }
             }

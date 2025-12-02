@@ -71,7 +71,13 @@ class LoginActivity : AppCompatActivity() {
                         Toast.makeText(this@LoginActivity, 
                             getString(R.string.success_login), Toast.LENGTH_SHORT).show()
                         
-                        startActivity(Intent(this@LoginActivity, DashboardActivity::class.java))
+                        // Redirect based on user role
+                        val destination = if (authResponse.user.role == "ADMIN") {
+                            AdminDashboardActivity::class.java
+                        } else {
+                            DashboardActivity::class.java
+                        }
+                        startActivity(Intent(this@LoginActivity, destination))
                         finish()
                     } else {
                         Toast.makeText(this@LoginActivity, 
