@@ -5,8 +5,11 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.location.Location
+import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Looper
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -34,6 +37,8 @@ class LocationPickerActivity : AppCompatActivity() {
     private var selectedAddress: String = ""
     private var selectedCityName: String = ""
     private var selectedPostalCode: String = ""
+    private var locationManager: LocationManager? = null
+    private var isRequestingLocation = false
 
     companion object {
         const val EXTRA_LOCATION_TYPE = "location_type"
@@ -45,10 +50,38 @@ class LocationPickerActivity : AppCompatActivity() {
         private const val LOCATION_PERMISSION_REQUEST = 1001
         private const val MAP_ANIMATION_DELAY_MS = 1100L
         
-        // Default location: Tunis, Tunisia
-        private val DEFAULT_LOCATION = GeoPoint(36.8065, 10.1815)
+        // Default location: Bizerte, Tunisia (updated for user's location)
+        private val DEFAULT_LOCATION = GeoPoint(37.2744, 9.8739)
         private const val DEFAULT_ZOOM = 12.0
         private const val SELECTED_ZOOM = 15.0
+    }
+    
+    // Location listener for getting fresh GPS coordinates
+    private val locationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            if (isRequestingLocation) {
+                isRequestingLocation = false
+                val currentGeoPoint = GeoPoint(location.latitude, location.longitude)
+                runOnUiThread {
+                    mapView.controller.animateTo(currentGeoPoint, SELECTED_ZOOM, 1000L)
+                    mapView.postDelayed({
+                        updateMarkerAndAddress()
+                    }, MAP_ANIMATION_DELAY_MS)
+                    Toast.makeText(
+                        this@LocationPickerActivity,
+                        "Location: ${location.latitude}, ${location.longitude}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                // Stop listening after getting location
+                locationManager?.removeUpdates(this)
+            }
+        }
+        
+        @Deprecated("Deprecated in Java")
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+        override fun onProviderEnabled(provider: String) {}
+        override fun onProviderDisabled(provider: String) {}
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,6 +93,8 @@ class LocationPickerActivity : AppCompatActivity() {
         
         binding = ActivityLocationPickerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
         // Set title based on location type
         val locationType = intent.getStringExtra(EXTRA_LOCATION_TYPE) ?: "location"
@@ -104,7 +139,7 @@ class LocationPickerActivity : AppCompatActivity() {
             false
         }
         
-        // Try to get current location
+        // Try to get current location automatically
         checkLocationPermissionAndGetLocation()
     }
 
@@ -173,20 +208,48 @@ class LocationPickerActivity : AppCompatActivity() {
         }
 
         try {
-            val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            isRequestingLocation = true
             
-            location?.let {
-                val currentGeoPoint = GeoPoint(it.latitude, it.longitude)
-                mapView.controller.animateTo(currentGeoPoint, SELECTED_ZOOM, 1000L)
-                mapView.postDelayed({
-                    updateMarkerAndAddress()
-                }, MAP_ANIMATION_DELAY_MS)
-            } ?: run {
-                Toast.makeText(this, getString(R.string.could_not_get_location), Toast.LENGTH_SHORT).show()
+            // First try to get a fresh location from GPS
+            val isGpsEnabled = locationManager?.isProviderEnabled(LocationManager.GPS_PROVIDER) ?: false
+            val isNetworkEnabled = locationManager?.isProviderEnabled(LocationManager.NETWORK_PROVIDER) ?: false
+            
+            when {
+                isGpsEnabled -> {
+                    Toast.makeText(this, "Getting GPS location...", Toast.LENGTH_SHORT).show()
+                    locationManager?.requestSingleUpdate(
+                        LocationManager.GPS_PROVIDER,
+                        locationListener,
+                        Looper.getMainLooper()
+                    )
+                }
+                isNetworkEnabled -> {
+                    Toast.makeText(this, "Getting network location...", Toast.LENGTH_SHORT).show()
+                    locationManager?.requestSingleUpdate(
+                        LocationManager.NETWORK_PROVIDER,
+                        locationListener,
+                        Looper.getMainLooper()
+                    )
+                }
+                else -> {
+                    isRequestingLocation = false
+                    // Fall back to last known location
+                    val lastLocation = locationManager?.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                        ?: locationManager?.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+                    
+                    if (lastLocation != null) {
+                        val currentGeoPoint = GeoPoint(lastLocation.latitude, lastLocation.longitude)
+                        mapView.controller.animateTo(currentGeoPoint, SELECTED_ZOOM, 1000L)
+                        mapView.postDelayed({
+                            updateMarkerAndAddress()
+                        }, MAP_ANIMATION_DELAY_MS)
+                    } else {
+                        Toast.makeText(this, getString(R.string.could_not_get_location), Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         } catch (e: Exception) {
+            isRequestingLocation = false
             Toast.makeText(this, getString(R.string.could_not_get_location), Toast.LENGTH_SHORT).show()
         }
     }
@@ -267,5 +330,13 @@ class LocationPickerActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mapView.onPause()
+        // Stop location updates when pausing
+        locationManager?.removeUpdates(locationListener)
+        isRequestingLocation = false
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        locationManager?.removeUpdates(locationListener)
     }
 }
