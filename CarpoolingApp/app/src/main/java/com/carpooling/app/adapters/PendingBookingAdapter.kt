@@ -11,7 +11,8 @@ import java.util.Locale
 class PendingBookingAdapter(
     private var bookings: List<Booking>,
     private val onAcceptClick: (Booking) -> Unit,
-    private val onRejectClick: (Booking) -> Unit
+    private val onRejectClick: (Booking) -> Unit,
+    private val onViewProfileClick: (Booking) -> Unit
 ) : RecyclerView.Adapter<PendingBookingAdapter.PendingBookingViewHolder>() {
     
     private val priceFormat = NumberFormat.getCurrencyInstance(Locale.US)
@@ -34,6 +35,10 @@ class PendingBookingAdapter(
             binding.tvPassenger.text = "Passenger: ${booking.passengerId.take(8)}..."
             binding.tvSeats.text = "Seats requested: ${booking.seatsBooked}"
             
+            binding.btnViewProfile.setOnClickListener {
+                onViewProfileClick(booking)
+            }
+
             binding.btnAccept.setOnClickListener {
                 onAcceptClick(booking)
             }

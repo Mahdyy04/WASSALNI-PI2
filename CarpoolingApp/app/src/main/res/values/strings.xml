@@ -67,7 +67,7 @@
     <!-- Reviews -->
     <string name="reviews">Reviews</string>
     <string name="write_review">Write Review</string>
-    <string name="rating_hint">Rating (1-5)</string>
+    <string name="rating_hint">Rating (1–5)</string>
     <string name="comment_hint">Comment (optional)</string>
     <string name="submit_review">Submit Review</string>
     <string name="no_reviews">No reviews yet</string>
@@ -100,6 +100,14 @@
     <string name="error_submit_report">Failed to submit report</string>
     <string name="error_driver_info_unavailable">Unable to report: driver information not available</string>
     
+    <!-- Pending Booking Item -->
+    <string name="route_placeholder">City A → City B</string>
+    <string name="date_placeholder">Date: 2025–12–01</string>
+    <string name="passenger_placeholder">Passenger: John Doe</string>
+    <string name="seats_placeholder">Seats requested: 1</string>
+    <string name="price_placeholder">$25</string>
+    <string name="view_profile">View Passenger Profile</string>
+
     <!-- Common -->
     <string name="error_empty_field">This field cannot be empty</string>
     <string name="error_invalid_email">Invalid email address</string>
@@ -110,7 +118,7 @@
     <string name="success_publish">Ride published successfully!</string>
     <string name="success_review">Review submitted!</string>
     <string name="success_report">Report submitted!</string>
-    <string name="loading">Loading...</string>
+    <string name="loading">Loading…</string>
     <string name="retry">Retry</string>
     
     <!-- Seat Selection Dialog -->
@@ -156,4 +164,12 @@
     <string name="admin_ban_failed">Failed to ban user</string>
     <string name="admin_unban_failed">Failed to unban user</string>
     <string name="admin_report_dismissed">Report dismissed</string>
+
+    <!-- Ride Item -->
+    <string name="route_sample">City A → City B</string>
+    <string name="driver_sample">Driver: John Doe</string>
+    <string name="date_sample">Date: 2025–12–01</string>
+    <string name="seats_sample">Seats: 3 available</string>
+    <string name="price_sample">$25</string>
+    <string name="profile">Profile</string>
 </resources>

@@ -17,7 +17,7 @@
             android:id="@+id/tvRoute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="City A → City B"
+            android:text="@string/route_placeholder"
             android:textSize="18sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
@@ -27,7 +27,7 @@
             android:id="@+id/tvDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Date: 2025-12-01"
+            android:text="@string/date_placeholder"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp" />
@@ -36,7 +36,7 @@
             android:id="@+id/tvPassenger"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Passenger: John Doe"
+            android:text="@string/passenger_placeholder"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="4dp" />
@@ -45,7 +45,7 @@
             android:id="@+id/tvSeats"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Seats requested: 1"
+            android:text="@string/seats_placeholder"
             android:textSize="14sp"
             android:textColor="@color/text_secondary"
             android:layout_marginBottom="8dp" />
@@ -54,11 +54,23 @@
             android:id="@+id/tvPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="$25"
+            android:text="@string/price_placeholder"
             android:textSize="18sp"
             android:textColor="@color/primary"
             android:textStyle="bold"
             android:layout_marginBottom="12dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnViewProfile"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:text="@string/view_profile"
+            android:textSize="14sp"
+            app:cornerRadius="8dp"
+            app:icon="@android:drawable/ic_menu_info_details"
+            app:iconGravity="start"
+            android:layout_marginBottom="8dp"
+            style="@style/Widget.Material3.Button.TonalButton" />
 
         <LinearLayout
             android:layout_width="match_parent"

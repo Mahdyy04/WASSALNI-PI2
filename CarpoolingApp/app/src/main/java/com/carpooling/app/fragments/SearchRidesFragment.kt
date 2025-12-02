@@ -2,6 +2,7 @@ package com.carpooling.app.fragments
 
 import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.carpooling.app.DriverProfileActivity
 import com.carpooling.app.R
 import com.carpooling.app.adapters.RideAdapter
 import com.carpooling.app.databinding.FragmentSearchRidesBinding
@@ -68,9 +70,11 @@ class SearchRidesFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        rideAdapter = RideAdapter(emptyList()) { ride ->
-            showSeatSelectionDialog(ride)
-        }
+        rideAdapter = RideAdapter(
+            emptyList(),
+            { ride -> showSeatSelectionDialog(ride) },
+            { driverId -> viewDriverProfile(driverId) }
+        )
         binding.rvRides.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = rideAdapter
@@ -122,6 +126,9 @@ class SearchRidesFragment : Fragment() {
                     // Filter to only show SCHEDULED rides with available seats
                     rides = rides.filter { it.status == "SCHEDULED" && it.availableSeats > 0 }
                     
+                    // Load driver names
+                    loadDriverNames(rides)
+
                     // Apply gender filter if selected
                     if (selectedGenderFilter != null) {
                         rides = filterByDriverGender(rides, selectedGenderFilter!!)
@@ -182,6 +189,9 @@ class SearchRidesFragment : Fragment() {
                 if (response.isSuccessful && response.body() != null) {
                     var rides = response.body()!!
                     
+                    // Load driver names
+                    loadDriverNames(rides)
+
                     // Apply gender filter if selected
                     if (selectedGenderFilter != null) {
                         rides = filterByDriverGender(rides, selectedGenderFilter!!)
@@ -199,9 +209,9 @@ class SearchRidesFragment : Fragment() {
                     binding.tvNoResults.visibility = View.VISIBLE
                     Toast.makeText(context, getString(R.string.no_rides_found), Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 binding.tvNoResults.visibility = View.VISIBLE
-                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show()
             } finally {
                 binding.progressBar.visibility = View.GONE
             }
@@ -299,12 +309,37 @@ class SearchRidesFragment : Fragment() {
                 } else {
                     Toast.makeText(context, "Booking failed: ${response.message()}", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
-                Toast.makeText(context, "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(context, "Network error", Toast.LENGTH_SHORT).show()
             }
         }
     }
     
+    private fun viewDriverProfile(driverId: String) {
+        val intent = Intent(requireContext(), DriverProfileActivity::class.java)
+        intent.putExtra("DRIVER_ID", driverId)
+        startActivity(intent)
+    }
+
+    private suspend fun loadDriverNames(rides: List<Ride>) {
+        // Fetch driver info for rides not in cache
+        val driverIds = rides.map { it.driverId }.distinct().filter { !driverCache.containsKey(it) }
+
+        for (driverId in driverIds) {
+            try {
+                val userResponse = RetrofitClient.apiService.getUserById(driverId)
+                if (userResponse.isSuccessful && userResponse.body() != null) {
+                    val user = userResponse.body()!!
+                    driverCache[driverId] = user
+                    // Update ride with driver name
+                    rides.find { it.driverId == driverId }?.driverName = user.displayName
+                }
+            } catch (e: Exception) {
+                // Skip this driver if we can't fetch info
+            }
+        }
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

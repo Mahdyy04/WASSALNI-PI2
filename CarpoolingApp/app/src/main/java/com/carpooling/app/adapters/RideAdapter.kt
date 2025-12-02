@@ -10,7 +10,8 @@ import java.util.Locale
 
 class RideAdapter(
     private var rides: List<Ride>,
-    private val onBookClick: (Ride) -> Unit
+    private val onBookClick: (Ride) -> Unit,
+    private val onViewDriverProfile: (String) -> Unit = {}
 ) : RecyclerView.Adapter<RideAdapter.RideViewHolder>() {
     
     private val priceFormat = NumberFormat.getCurrencyInstance(Locale.US)
@@ -20,7 +21,7 @@ class RideAdapter(
         
         fun bind(ride: Ride) {
             binding.tvRoute.text = "${ride.from} → ${ride.to}"
-            binding.tvDriver.text = "Driver ID: ${ride.driverId.take(8)}..."
+            binding.tvDriver.text = "Driver: ${ride.driverName.ifEmpty { "Unknown" }}"
             binding.tvDate.text = "Date: ${ride.date}"
             binding.tvSeats.text = "Seats: ${ride.availableSeats} available"
             binding.tvPrice.text = "${priceFormat.format(ride.price)}/seat"
@@ -31,6 +32,10 @@ class RideAdapter(
             
             binding.btnBook.setOnClickListener {
                 onBookClick(ride)
+            }
+
+            binding.btnViewDriverProfile.setOnClickListener {
+                onViewDriverProfile(ride.driverId)
             }
         }
     }
