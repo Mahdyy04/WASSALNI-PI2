@@ -1,35 +1,36 @@
 package com.carpooling.app
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Geocoder
+import android.location.LocationManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.carpooling.app.databinding.ActivityLocationPickerBinding
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.MapView
+import org.osmdroid.views.overlay.Marker
 import java.io.IOException
 import java.util.Locale
 
 /**
- * Activity for picking a location on the map.
- * The user can move the map to select a location, and the address will be displayed in real-time.
+ * Activity for picking a location on the map using OSMDroid (OpenStreetMap).
+ * This is a free, open-source alternative to Google Maps - similar to Leaflet.js for web.
+ * No API key required!
  */
-class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
+class LocationPickerActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLocationPickerBinding
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var googleMap: GoogleMap? = null
-    private var selectedLatLng: LatLng? = null
+    private lateinit var mapView: MapView
+    private var centerMarker: Marker? = null
+    private var selectedGeoPoint: GeoPoint? = null
     private var selectedAddress: String = ""
     private var selectedCityName: String = ""
     private var selectedPostalCode: String = ""
@@ -42,19 +43,23 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
         const val RESULT_CITY_NAME = "city_name"
         const val RESULT_POSTAL_CODE = "postal_code"
         private const val LOCATION_PERMISSION_REQUEST = 1001
+        private const val MAP_ANIMATION_DELAY_MS = 1100L
         
         // Default location: Tunis, Tunisia
-        private val DEFAULT_LOCATION = LatLng(36.8065, 10.1815)
-        private const val DEFAULT_ZOOM = 12f
-        private const val SELECTED_ZOOM = 15f
+        private val DEFAULT_LOCATION = GeoPoint(36.8065, 10.1815)
+        private const val DEFAULT_ZOOM = 12.0
+        private const val SELECTED_ZOOM = 15.0
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Configure OSMDroid before inflating layout
+        Configuration.getInstance().load(this, getSharedPreferences("osmdroid", MODE_PRIVATE))
+        Configuration.getInstance().userAgentValue = packageName
+        
         binding = ActivityLocationPickerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         // Set title based on location type
         val locationType = intent.getStringExtra(EXTRA_LOCATION_TYPE) ?: "location"
@@ -64,11 +69,55 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
             getString(R.string.select_destination_location)
         }
 
-        // Initialize the map
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.mapFragment) as? SupportMapFragment
-        mapFragment?.getMapAsync(this)
-
+        setupMap()
         setupListeners()
+    }
+
+    private fun setupMap() {
+        mapView = binding.mapView
+        
+        // Configure the map
+        mapView.setTileSource(TileSourceFactory.MAPNIK)
+        mapView.setMultiTouchControls(true)
+        mapView.controller.setZoom(DEFAULT_ZOOM)
+        mapView.controller.setCenter(DEFAULT_LOCATION)
+        
+        // Create center marker
+        centerMarker = Marker(mapView).apply {
+            position = DEFAULT_LOCATION
+            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            icon = ContextCompat.getDrawable(this@LocationPickerActivity, android.R.drawable.ic_menu_mylocation)
+            title = getString(R.string.selected_location)
+        }
+        mapView.overlays.add(centerMarker)
+        
+        // Listen for map movements - update marker position when user scrolls the map
+        mapView.addOnFirstLayoutListener { _, _, _, _, _ ->
+            updateMarkerAndAddress()
+        }
+        
+        // Update marker position when map is scrolled
+        mapView.setOnTouchListener { _, _ ->
+            mapView.postDelayed({
+                updateMarkerAndAddress()
+            }, 100)
+            false
+        }
+        
+        // Try to get current location
+        checkLocationPermissionAndGetLocation()
+    }
+
+    private fun updateMarkerAndAddress() {
+        val center = mapView.mapCenter as GeoPoint
+        selectedGeoPoint = center
+        
+        // Update marker position
+        centerMarker?.position = center
+        mapView.invalidate()
+        
+        // Update address
+        updateAddressFromLocation(center)
     }
 
     private fun setupListeners() {
@@ -77,10 +126,10 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         binding.btnConfirm.setOnClickListener {
-            if (selectedLatLng != null) {
+            if (selectedGeoPoint != null) {
                 val intent = Intent().apply {
-                    putExtra(RESULT_LATITUDE, selectedLatLng!!.latitude)
-                    putExtra(RESULT_LONGITUDE, selectedLatLng!!.longitude)
+                    putExtra(RESULT_LATITUDE, selectedGeoPoint!!.latitude)
+                    putExtra(RESULT_LONGITUDE, selectedGeoPoint!!.longitude)
                     putExtra(RESULT_ADDRESS, selectedAddress)
                     putExtra(RESULT_CITY_NAME, selectedCityName)
                     putExtra(RESULT_POSTAL_CODE, selectedPostalCode)
@@ -98,37 +147,12 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    override fun onMapReady(map: GoogleMap) {
-        googleMap = map
-
-        // Configure map UI settings
-        map.uiSettings.apply {
-            isZoomControlsEnabled = true
-            isCompassEnabled = true
-            isMyLocationButtonEnabled = false // We have our own button
-        }
-
-        // Move to default location
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(DEFAULT_LOCATION, DEFAULT_ZOOM))
-
-        // Set camera idle listener to detect when user stops moving the map
-        map.setOnCameraIdleListener {
-            val center = map.cameraPosition.target
-            selectedLatLng = center
-            updateAddressFromLocation(center)
-        }
-
-        // Try to get current location
-        checkLocationPermissionAndGetLocation()
-    }
-
     private fun checkLocationPermissionAndGetLocation() {
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
             ) == PackageManager.PERMISSION_GRANTED
         ) {
-            googleMap?.isMyLocationEnabled = true
             getCurrentLocation()
         } else {
             ActivityCompat.requestPermissions(
@@ -148,30 +172,39 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+        try {
+            val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+                ?: locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            
             location?.let {
-                val currentLatLng = LatLng(it.latitude, it.longitude)
-                googleMap?.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLatLng, SELECTED_ZOOM))
+                val currentGeoPoint = GeoPoint(it.latitude, it.longitude)
+                mapView.controller.animateTo(currentGeoPoint, SELECTED_ZOOM, 1000L)
+                mapView.postDelayed({
+                    updateMarkerAndAddress()
+                }, MAP_ANIMATION_DELAY_MS)
+            } ?: run {
+                Toast.makeText(this, getString(R.string.could_not_get_location), Toast.LENGTH_SHORT).show()
             }
-        }.addOnFailureListener {
+        } catch (e: Exception) {
             Toast.makeText(this, getString(R.string.could_not_get_location), Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun updateAddressFromLocation(latLng: LatLng) {
+    private fun updateAddressFromLocation(geoPoint: GeoPoint) {
         // Update coordinates display
         binding.tvCoordinates.text = String.format(
             Locale.US, 
             "Lat: %.6f, Lng: %.6f", 
-            latLng.latitude, 
-            latLng.longitude
+            geoPoint.latitude, 
+            geoPoint.longitude
         )
 
         // Perform reverse geocoding to get address
         try {
             val geocoder = Geocoder(this, Locale.getDefault())
             @Suppress("DEPRECATION")
-            val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
+            val addresses = geocoder.getFromLocation(geoPoint.latitude, geoPoint.longitude, 1)
             
             if (!addresses.isNullOrEmpty()) {
                 val address = addresses[0]
@@ -215,14 +248,7 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    googleMap?.isMyLocationEnabled = true
-                    getCurrentLocation()
-                }
+                getCurrentLocation()
             } else {
                 Toast.makeText(
                     this,
@@ -231,5 +257,15 @@ class LocationPickerActivity : AppCompatActivity(), OnMapReadyCallback {
                 ).show()
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        mapView.onResume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        mapView.onPause()
     }
 }

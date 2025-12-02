@@ -5,10 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Google Map Fragment -->
-    <fragment
-        android:id="@+id/mapFragment"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <!-- OSMDroid MapView (OpenStreetMap - like Leaflet for Android) -->
+    <org.osmdroid.views.MapView
+        android:id="@+id/mapView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         app:layout_constraintTop_toTopOf="parent"
@@ -23,8 +22,8 @@
         android:contentDescription="@string/selected_location"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/mapFragment"
-        app:layout_constraintBottom_toBottomOf="@id/mapFragment"
+        app:layout_constraintTop_toTopOf="@id/mapView"
+        app:layout_constraintBottom_toBottomOf="@id/mapView"
         app:tint="@color/design_default_color_primary" />
 
     <!-- My Location Button -->
