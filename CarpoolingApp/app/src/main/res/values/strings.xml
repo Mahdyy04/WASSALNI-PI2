@@ -171,8 +171,8 @@
     <!-- Sample texts for layouts -->
     <string name="route_sample">City A → City B</string>
     <string name="driver_sample">Driver Name</string>
-    <string name="date_sample">Date</string>
-    <string name="seats_sample">Seats Available</string>
+    <string name="date_sample">Jan 15, 2024</string>
+    <string name="seats_sample">4 seats</string>
     <string name="price_sample">$0.00</string>
 
     <!-- Location Picker -->
