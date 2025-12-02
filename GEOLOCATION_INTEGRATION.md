@@ -25,16 +25,18 @@ Ce guide explique comment intégrer la géolocalisation dans les fonctionnalité
 dependencies {
     // ... dépendances existantes ...
     
-    // Google Maps SDK
-    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // Google Maps SDK (version stable)
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
     
     // Google Location Services (pour la localisation)
-    implementation("com.google.android.gms:play-services-location:21.1.0")
+    implementation("com.google.android.gms:play-services-location:21.3.0")
     
     // Google Places API (pour l'autocomplétion d'adresses)
-    implementation("com.google.android.libraries.places:places:3.3.0")
+    implementation("com.google.android.libraries.places:places:4.1.0")
 }
 ```
+
+> **Note** : Ces versions sont les dernières stables disponibles (décembre 2024). Vérifiez toujours les dernières versions sur [Maven Repository](https://mvnrepository.com/artifact/com.google.android.gms) avant d'implémenter.
 
 ### 1.2 Ajouter les permissions dans `AndroidManifest.xml`
 

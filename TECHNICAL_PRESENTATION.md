@@ -630,6 +630,19 @@ mvn spring-boot:run
 | Auth Token | Simple token pattern | Implement JWT with expiration |
 | API Security | Bearer token in headers | Add role-based authorization |
 | User Banning | Server-side check on login | ✅ Working correctly |
+| Angular Dependencies | v17.0.0 (has known vulnerabilities) | Upgrade to Angular 19+ |
+
+### ⚠️ Angular Security Notice
+
+The Angular frontend (in `Frontend/`) currently uses Angular 17.0.0 which has known security vulnerabilities:
+- **GHSA-58c5-g7wp-6w37**: XSRF Token Leakage via Protocol-Relative URLs (High)
+- **GHSA-v4hv-rgfq-gp49**: Stored XSS Vulnerability via SVG attributes (High)
+
+**Recommended action**: Upgrade to Angular 19.x or later:
+```bash
+cd Frontend
+ng update @angular/core@19 @angular/cli@19
+```
 
 ---
 
