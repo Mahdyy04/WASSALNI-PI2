@@ -1,0 +1,98 @@
+package com.carpooling.app
+
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.carpooling.app.databinding.ActivityLoginBinding
+import com.carpooling.app.models.LoginRequest
+import com.carpooling.app.network.RetrofitClient
+import com.carpooling.app.utils.SessionManager
+import kotlinx.coroutines.launch
+
+class LoginActivity : AppCompatActivity() {
+    
+    private lateinit var binding: ActivityLoginBinding
+    private lateinit var sessionManager: SessionManager
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = ActivityLoginBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        
+        sessionManager = SessionManager(this)
+        
+        binding.btnLogin.setOnClickListener {
+            val email = binding.etEmail.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+            
+            if (validateInput(email, password)) {
+                loginUser(email, password)
+            }
+        }
+        
+        binding.tvSignup.setOnClickListener {
+            startActivity(Intent(this, SignupActivity::class.java))
+            finish()
+        }
+    }
+    
+    private fun validateInput(email: String, password: String): Boolean {
+        if (email.isEmpty()) {
+            binding.etEmail.error = getString(R.string.error_empty_field)
+            return false
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.etEmail.error = getString(R.string.error_invalid_email)
+            return false
+        }
+        if (password.isEmpty()) {
+            binding.etPassword.error = getString(R.string.error_empty_field)
+            return false
+        }
+        return true
+    }
+    
+    private fun loginUser(email: String, password: String) {
+        binding.btnLogin.isEnabled = false
+        
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.apiService.login(
+                    LoginRequest(email, password)
+                )
+                
+                if (response.isSuccessful && response.body() != null) {
+                    val authResponse = response.body()!!
+                    if (authResponse.status == "success" && authResponse.user != null) {
+                        sessionManager.saveUser(authResponse.user, authResponse.token)
+                        RetrofitClient.setAuthToken(authResponse.token)
+                        Toast.makeText(this@LoginActivity, 
+                            getString(R.string.success_login), Toast.LENGTH_SHORT).show()
+                        
+                        // Redirect based on user role
+                        val destination = if (authResponse.user.role == "ADMIN") {
+                            AdminDashboardActivity::class.java
+                        } else {
+                            DashboardActivity::class.java
+                        }
+                        startActivity(Intent(this@LoginActivity, destination))
+                        finish()
+                    } else {
+                        Toast.makeText(this@LoginActivity, 
+                            "Invalid credentials", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(this@LoginActivity, 
+                        "Login failed. Please check your credentials.", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(this@LoginActivity, 
+                    "Network error: ${e.message}", Toast.LENGTH_SHORT).show()
+            } finally {
+                binding.btnLogin.isEnabled = true
+            }
+        }
+    }
+}
