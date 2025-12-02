@@ -5,5 +5,6 @@ com\example\booking\service\BookingServiceImpl.class
 com\example\booking\dto\BookingResponse.class
 com\example\booking\service\BookingService.class
 com\example\booking\entities\Booking.class
+com\example\booking\config\WebClientConfig.class
 com\example\booking\dto\CreateBookingRequest.class
 com\example\booking\repository\BookingRepository.class
