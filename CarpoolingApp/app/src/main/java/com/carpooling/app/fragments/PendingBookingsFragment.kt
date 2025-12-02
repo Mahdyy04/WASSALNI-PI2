@@ -1,5 +1,6 @@
 package com.carpooling.app.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,7 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.carpooling.app.R
+import com.carpooling.app.PassengerProfileActivity
 import com.carpooling.app.adapters.PendingBookingAdapter
 import com.carpooling.app.databinding.FragmentPendingBookingsBinding
 import com.carpooling.app.models.Booking
@@ -49,7 +50,8 @@ class PendingBookingsFragment : Fragment() {
         pendingBookingAdapter = PendingBookingAdapter(
             bookings = emptyList(),
             onAcceptClick = { booking -> acceptBooking(booking) },
-            onRejectClick = { booking -> rejectBooking(booking) }
+            onRejectClick = { booking -> rejectBooking(booking) },
+            onViewProfileClick = { booking -> viewPassengerProfile(booking) }
         )
         binding.rvPendingBookings.apply {
             layoutManager = LinearLayoutManager(context)
@@ -81,7 +83,7 @@ class PendingBookingsFragment : Fragment() {
                 } else {
                     showEmptyState()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 showEmptyState()
                 Toast.makeText(context, "Error loading pending bookings", Toast.LENGTH_SHORT).show()
             } finally {
@@ -99,7 +101,7 @@ class PendingBookingsFragment : Fragment() {
                 if (rideResponse.isSuccessful && rideResponse.body() != null) {
                     booking.ride = rideResponse.body()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Ignore errors for individual ride lookups
             }
         }
@@ -112,6 +114,12 @@ class PendingBookingsFragment : Fragment() {
         binding.rvPendingBookings.visibility = View.GONE
     }
     
+    private fun viewPassengerProfile(booking: Booking) {
+        val intent = Intent(requireContext(), PassengerProfileActivity::class.java)
+        intent.putExtra("PASSENGER_ID", booking.passengerId)
+        startActivity(intent)
+    }
+
     private fun acceptBooking(booking: Booking) {
         val driverId = sessionManager.getUserId()
         if (driverId.isEmpty()) return
@@ -125,7 +133,7 @@ class PendingBookingsFragment : Fragment() {
                 } else {
                     Toast.makeText(context, "Failed to accept booking", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Network error - show error message
                 Toast.makeText(context, "Network error. Please try again.", Toast.LENGTH_SHORT).show()
             }
@@ -145,7 +153,7 @@ class PendingBookingsFragment : Fragment() {
                 } else {
                     Toast.makeText(context, "Failed to reject booking", Toast.LENGTH_SHORT).show()
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Network error - show error message
                 Toast.makeText(context, "Network error. Please try again.", Toast.LENGTH_SHORT).show()
             }

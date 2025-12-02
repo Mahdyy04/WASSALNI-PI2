@@ -40,7 +40,8 @@ class DashboardActivity : AppCompatActivity() {
         
         setupTabs(userRole)
         setupNotificationButton()
-        
+        setupProfileButton()
+
         binding.btnLogout.setOnClickListener {
             logout()
         }
@@ -79,6 +80,13 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
     
+    private fun setupProfileButton() {
+        binding.btnProfile.setOnClickListener {
+            val intent = Intent(this, MyProfileActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
     /**
      * Update notification badge using existing booking data (no separate notification service needed).
      * 

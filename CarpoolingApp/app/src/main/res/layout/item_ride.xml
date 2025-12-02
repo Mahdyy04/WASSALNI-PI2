@@ -17,38 +17,64 @@
             android:id="@+id/tvRoute"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="City A → City B"
+            android:text="@string/route_sample"
             android:textSize="18sp"
             android:textColor="@color/text_primary"
             android:textStyle="bold"
             android:layout_marginBottom="8dp" />
 
-        <TextView
-            android:id="@+id/tvDriver"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Driver: John Doe"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="4dp" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
 
-        <TextView
-            android:id="@+id/tvDate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Date: 2025-12-01"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="4dp" />
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tvSeats"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Seats: 3 available"
-            android:textSize="14sp"
-            android:textColor="@color/text_secondary"
-            android:layout_marginBottom="12dp" />
+                <TextView
+                    android:id="@+id/tvDriver"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/driver_sample"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/date_sample"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvSeats"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/seats_sample"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnViewDriverProfile"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="@string/view_profile"
+                android:textSize="12sp"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_menu_info_details"
+                app:iconGravity="start"
+                style="@style/Widget.Material3.Button.TonalButton" />
+
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -61,7 +87,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="$25"
+                android:text="@string/price_sample"
                 android:textSize="24sp"
                 android:textColor="@color/primary"
                 android:textStyle="bold" />

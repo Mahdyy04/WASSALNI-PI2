@@ -24,13 +24,13 @@ data class Ride(
     val availableSeats: Int = 0,
     val pricePerSeat: Double? = null,
     val status: String = "SCHEDULED", // SCHEDULED, IN_PROGRESS, COMPLETED, CANCELLED
-    val driverId: String = ""
+    val driverId: String = "",
+    var driverName: String = "" // Will be populated from API
 ) {
     // Convenience properties for UI display
     val from: String get() = departureCity.name
     val to: String get() = destinationCity.name
-    val driverName: String get() = "Driver" // Will be populated from a separate call if needed
-    
+
     // Safe price accessor (defaults to 0.0 if null)
     val price: Double get() = pricePerSeat ?: 0.0
     

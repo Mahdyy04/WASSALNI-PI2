@@ -8,4 +8,10 @@
     </style>
 
     <style name="Theme.CarpoolingApp" parent="Base.Theme.CarpoolingApp" />
+
+    <!-- Shape Appearance for Circle Avatar -->
+    <style name="ShapeAppearance.App.Circle" parent="ShapeAppearance.Material3.LargeComponent">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

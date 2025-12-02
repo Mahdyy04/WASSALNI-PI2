@@ -89,7 +89,9 @@ data class Review(
     val rideId: String = "",
     val rating: Int = 0,
     val comment: String = "",
-    val type: String = "DRIVER" // DRIVER or PASSENGER
+    val type: String = "DRIVER", // DRIVER or PASSENGER
+    val reviewerName: String = "", // Name of the reviewer
+    val createdAt: String = "" // Date of the review
 )
 
 /**
