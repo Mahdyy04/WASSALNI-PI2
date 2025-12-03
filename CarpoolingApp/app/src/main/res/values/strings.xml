@@ -157,6 +157,24 @@
     <string name="admin_unban_failed">Failed to unban user</string>
     <string name="admin_report_dismissed">Report dismissed</string>
     
+    <!-- Profile -->
+    <string name="profile">Profile</string>
+    <string name="view_profile">View Profile</string>
+
+    <!-- Placeholder texts for layouts -->
+    <string name="route_placeholder">From → To</string>
+    <string name="date_placeholder">Date</string>
+    <string name="passenger_placeholder">Passenger</string>
+    <string name="seats_placeholder">Seats</string>
+    <string name="price_placeholder">Price</string>
+
+    <!-- Sample texts for layouts -->
+    <string name="route_sample">City A → City B</string>
+    <string name="driver_sample">Driver Name</string>
+    <string name="date_sample">Jan 15, 2024</string>
+    <string name="seats_sample">4 seats</string>
+    <string name="price_sample">$0.00</string>
+
     <!-- Location Picker -->
     <string name="select_on_map">Select on Map</string>
     <string name="location_selected">Location selected</string>

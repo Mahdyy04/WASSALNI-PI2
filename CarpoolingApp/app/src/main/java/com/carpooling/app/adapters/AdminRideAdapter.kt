@@ -14,7 +14,8 @@ import java.util.Locale
  * Adapter for displaying all rides in admin rides history view.
  */
 class AdminRideAdapter(
-    private var rides: List<Ride>
+    private var rides: List<Ride>,
+    private val onViewDriverProfile: (String) -> Unit = {}
 ) : RecyclerView.Adapter<AdminRideAdapter.RideViewHolder>() {
     
     private val priceFormat = NumberFormat.getCurrencyInstance(Locale.US)
@@ -43,6 +44,11 @@ class AdminRideAdapter(
             
             // Hide book button in admin view
             binding.btnBook.visibility = android.view.View.GONE
+            
+            // Set up view profile button click handler
+            binding.btnViewDriverProfile.setOnClickListener {
+                onViewDriverProfile(ride.driverId)
+            }
         }
     }
     

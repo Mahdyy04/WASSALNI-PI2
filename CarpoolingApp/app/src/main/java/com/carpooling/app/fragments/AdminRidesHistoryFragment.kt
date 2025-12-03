@@ -1,5 +1,6 @@
 package com.carpooling.app.fragments
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,6 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.carpooling.app.DriverProfileActivity
 import com.carpooling.app.adapters.AdminRideAdapter
 import com.carpooling.app.databinding.FragmentAdminRidesHistoryBinding
 import com.carpooling.app.network.RetrofitClient
@@ -43,11 +45,20 @@ class AdminRidesHistoryFragment : Fragment() {
     }
     
     private fun setupRecyclerView() {
-        rideAdapter = AdminRideAdapter(emptyList())
+        rideAdapter = AdminRideAdapter(
+            rides = emptyList(),
+            onViewDriverProfile = { driverId -> viewDriverProfile(driverId) }
+        )
         binding.rvRides.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = rideAdapter
         }
+    }
+    
+    private fun viewDriverProfile(driverId: String) {
+        val intent = Intent(requireContext(), DriverProfileActivity::class.java)
+        intent.putExtra("DRIVER_ID", driverId)
+        startActivity(intent)
     }
     
     private fun loadRides() {
